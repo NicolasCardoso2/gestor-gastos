@@ -1,34 +1,68 @@
-# Gestor de Gastos
+h1 align="center">💰 Gestor de Gastos</h1>
 
-Aplicativo desktop em Electron + SQLite para gestão de gastos e boletos.
+<p align="center">
+  Aplicativo desktop para <strong>gestão de gastos e boletos</strong>, desenvolvido com <code>Electron</code> + <code>SQLite</code>.
+</p>
 
-## Requisitos
-- Node.js 18+
-- Windows 10/11
+<p align="center">
+  <img src="https://img.shields.io/badge/Electron-^28.0-blue?logo=electron" alt="Electron Badge" />
+  <img src="https://img.shields.io/badge/SQLite-DB-lightblue?logo=sqlite" alt="SQLite Badge" />
+  <img src="https://img.shields.io/badge/Node.js-18%2B-brightgreen?logo=node.js" alt="Node.js Badge" />
+  <img src="https://img.shields.io/badge/Platform-Windows%2010/11-blue?logo=windows" alt="Windows Badge" />
+</p>
 
-## Desenvolvimento
+---
+
+## 🧩 Requisitos
+
+- **Node.js** `v18+`
+- **Windows 10 ou 11**
+
+---
+
+## ⚙️ Desenvolvimento
+
 ```powershell
 npm install
 npm run start
-```
-
-## Gerar ícones (dev)
-```powershell
+🎨 Gerar ícones (modo dev)
+powershell
+Copiar código
 npm run icons
-```
-
-## Build do instalador (Windows)
-```powershell
+📦 Build do instalador (Windows)
+powershell
+Copiar código
 npm run dist
-```
-O instalador (.exe) será gerado em `dist/`.
+📁 O instalador (.exe) será gerado na pasta dist/.
 
-## Estrutura
-- `main.js`: processo principal do Electron
-- `renderer/`: UI (HTML/CSS/JS)
-- `preload.js`: bridge seguro entre main e renderer
-- `scripts/generate-icons.js`: gera `build/icon.ico` a partir de `assets/app-icon.png`
+🗂️ Estrutura do Projeto
+css
+Copiar código
+├── main.js                  # Processo principal do Electron
+├── preload.js               # Bridge segura entre main e renderer
+├── renderer/                # Interface (HTML, CSS, JS)
+├── scripts/
+│   └── generate-icons.js    # Gera build/icon.ico a partir de assets/app-icon.png
+└── assets/
+    └── app-icon.png
+💾 Banco de Dados
+O banco database.db é criado automaticamente em:
 
-## Observações
-- O banco `database.db` é criado em `%APPDATA%/Gestor de Gastos` (pasta userData do Electron) quando o app roda.
-- Artefatos de build (`dist/`, `build/`), `node_modules/` e `database.db` estão no `.gitignore`.
+shell
+Copiar código
+%APPDATA%/Gestor de Gastos
+Artefatos de build (dist/, build/), node_modules/ e database.db estão listados no .gitignore.
+
+🚀 Tecnologias Utilizadas
+Tecnologia	Função
+🖥️ Electron	Criação do app desktop
+💾 SQLite	Armazenamento local dos dados
+⚡ Node.js	Execução e scripts de build
+🎨 HTML/CSS/JS	Interface gráfica (renderer)
+
+🧠 Observações
+Projeto simples e leve para controle pessoal de gastos.
+
+Ideal para estudo de integração entre Electron + SQLite.
+
+Código modular e fácil de adaptar para outras aplicações desktop.
