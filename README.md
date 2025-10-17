@@ -1,4 +1,4 @@
-h1 align="center">💰 Gestor de Gastos</h1>
+<h1 align="center">💰 Gestor de Gastos</h1>
 
 <p align="center">
   Aplicativo desktop para <strong>gestão de gastos e boletos</strong>, desenvolvido com <code>Electron</code> + <code>SQLite</code>.
@@ -16,51 +16,53 @@ h1 align="center">💰 Gestor de Gastos</h1>
 ## 🧩 Requisitos
 
 - **Node.js** `v18+`
-- **Windows 10 ou 11**
+- **Windows 10 ou 11`
 
 ---
 
 ## ⚙️ Desenvolvimento
 
-```powershell
 npm install
+
 npm run start
+
+---
+
 🎨 Gerar ícones (modo dev)
-powershell
-Copiar código
+
 npm run icons
+
+---
+
 📦 Build do instalador (Windows)
-powershell
-Copiar código
+
 npm run dist
+
 📁 O instalador (.exe) será gerado na pasta dist/.
 
-🗂️ Estrutura do Projeto
-css
-Copiar código
-├── main.js                  # Processo principal do Electron
-├── preload.js               # Bridge segura entre main e renderer
-├── renderer/                # Interface (HTML, CSS, JS)
-├── scripts/
-│   └── generate-icons.js    # Gera build/icon.ico a partir de assets/app-icon.png
-└── assets/
-    └── app-icon.png
+---
+
 💾 Banco de Dados
 O banco database.db é criado automaticamente em:
 
-shell
-Copiar código
-%APPDATA%/Gestor de Gastos
+  %APPDATA%/Gestor de Gastos
+
 Artefatos de build (dist/, build/), node_modules/ e database.db estão listados no .gitignore.
 
+---
+
 🚀 Tecnologias Utilizadas
-Tecnologia	Função
-🖥️ Electron	Criação do app desktop
-💾 SQLite	Armazenamento local dos dados
-⚡ Node.js	Execução e scripts de build
-🎨 HTML/CSS/JS	Interface gráfica (renderer)
+| Tecnologia     | Função                        |
+| -------------- | ----------------------------- |
+| 🖥️ Electron   | Criação do app desktop        |
+| 💾 SQLite      | Armazenamento local dos dados |
+| ⚡ Node.js      | Execução e scripts de build   |
+| 🎨 HTML/CSS/JS | Interface gráfica (renderer)  |
+
+---
 
 🧠 Observações
+
 Projeto simples e leve para controle pessoal de gastos.
 
 Ideal para estudo de integração entre Electron + SQLite.
