@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self';">
+  <title>Gestor de Gastos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="main-layout">
+    
+    <!-- =================(TABELA DE BOLETOS)================= -->
+    <div class="boletos-table-container">
+      <h2>Boletos do Dia</h2>
+      <div class="current-date-indicator" id="current-date-indicator"></div>
+      <table id="boletos-table" class="boletos-table">
+        <thead>
+          <tr><th>Nome</th><th>Valor</th></tr>
+        </thead>
+        <tbody><!-- Preenchido via JS --></tbody>
+        <tfoot>
+          <tr><td><strong>Total</strong></td><td id="boletos-total">R$ 0,00</td></tr>
+        </tfoot>
+      </table>
+      <div class="boletos-actions">
+        <button id="refresh-btn" class="btn refresh-btn" title="Atualizar página">🔄</button>
+      </div>
+    </div>
+
+    <!-- =================(TELA CALENDÁRIO)================= -->
+    <div id="calendar-screen" class="screen active">
+      <header class="calendar-header">
+        <button id="prev-month" class="btn nav-btn">◀</button>
+        <h1 id="calendar-title">Outubro 2025</h1>
+        <button id="next-month" class="btn nav-btn">▶</button>
+      </header>
+      <div class="weekdays">
+        <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span>
+        <span>Sex</span><span>Sáb</span><span>Dom</span>
+      </div>
+      <main id="calendar" class="calendar"></main>
+    </div>
+  </div>
+
+  <!-- =================(TELA DETALHES)================= -->
+  <div id="details-screen" class="screen">
+    <header>
+      <button id="back-btn" class="back-btn">← Voltar</button>
+      <h2 id="selected-date"></h2>
+    </header>
+    <div class="details-content">
+      <form id="expense-form">
+        <label for="boleto-type">Boleto:</label>
+        <select id="boleto-type" required>
+          <option value="">Selecione...</option>
+          <option value="Água">Água</option><option value="Luz">Luz</option>
+          <option value="Internet">Internet</option><option value="Telefone">Telefone</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <label for="boleto-due">Vencimento:</label>
+        <input type="date" id="boleto-due" required>
+        <label for="expense-value">Valor (R$):</label>
+        <input type="number" id="expense-value" required step="0.01">
+        <button type="submit" class="btn">Adicionar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =================(MODAL BOLETOS)================= -->
+  <div id="boletos-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="close-modal" class="close">&times;</span>
+      <h2 id="modal-date"></h2>
+      <div class="boletos-header">
+        <h3>Boletos cadastrados:</h3>
+        <div class="boletos-buttons">
+          <button id="add-boleto-btn" class="btn">Adicionar</button>
+          <button id="editar-boleto-btn" class="btn" disabled>Editar</button>
+          <button id="deletar-boleto-btn" class="btn btn-danger" disabled>Deletar</button>
+        </div>
+      </div>
+      <div class="boletos-list-block">
+        <div class="boletos-list-scroll">
+          <ul id="modal-boletos-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================(FORMULÁRIO MODAL)================= -->
+    <form id="add-boleto-form" style="display:none; margin-top:16px;">
+      <table class="boleto-form-table">
+        <tr>
+          <td><label for="modal-boleto-type">Tipo de boleto:</label></td>
+          <td>
+            <select id="modal-boleto-type" required>
+              <option value="">Selecione...</option>
+              <option value="Luz">Luz</option><option value="Água">Água</option>
+              <option value="Internet">Internet</option><option value="Telefone">Telefone</option>
+              <option value="Aluguel">Aluguel</option><option value="Cartão">Cartão</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td><label for="modal-boleto-nome">Nome do boleto:</label></td>
+          <td><input type="text" id="modal-boleto-nome" required></td>
+        </tr>
+        <tr>
+          <td><label for="modal-boleto-valor">Valor:</label></td>
+          <td><input type="number" id="modal-boleto-valor" required step="0.01"></td>
+        </tr>
+        <tr>
+          <td><label for="modal-boleto-obs">Observações:</label></td>
+          <td><input type="text" id="modal-boleto-obs"></td>
+        </tr>
+        <tr>
+          <td><label for="modal-boleto-repeticao">Repetição:</label></td>
+          <td>
+            <select id="modal-boleto-repeticao">
+              <option value="unica">Única vez</option>
+              <option value="mensal">Mensal</option>
+            </select>
+          </td>
+        </tr>
+        <tr id="row-boleto-meses" style="display:none;">
+          <td><label for="modal-boleto-meses">Mensal:</label></td>
+          <td>
+            <div class="mensal-aba">
+              <div class="mensal-input">
+                <input type="number" id="modal-boleto-meses" min="1" step="1" placeholder="Quantidade de meses" />
+                <span id="modal-boleto-meses-preview" class="mensal-preview"></span>
+              </div>
+              <small class="hint">Informe por quantos meses deve repetir (ex.: 6 meses).</small>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="save-btn-cell" colspan="2">
+            <button type="submit" class="btn" style="margin-top:12px;">Salvar boleto</button>
+            <button type="button" id="cancel-edit-btn" class="btn" style="margin-top:12px; display:none; background:#ccc;">Cancelar</button>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

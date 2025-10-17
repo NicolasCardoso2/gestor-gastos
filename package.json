@@ -1,0 +1,44 @@
+{
+  "name": "gestor-gastos",
+  "version": "1.0.0",
+  "description": "Sistema de gestão de gastos com Electron e SQLite",
+  "main": "main.js",
+  "author": "Edson",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "icons": "node scripts/generate-icons.js",
+    "pack": "npm run icons && electron-builder --dir",
+    "dist": "npm run icons && electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "electron-builder": "^24.9.1",
+    "png-to-ico": "^2.1.8",
+    "electron": "^31.0.0"
+  },
+  "build": {
+    "appId": "com.edson.gestorgastos",
+    "productName": "Gestor de Gastos",
+    "directories": {
+      "buildResources": "build"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Gestor de Gastos"
+    }
+  }
+  
+}

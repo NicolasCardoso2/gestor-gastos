@@ -1,0 +1,372 @@
+/* ================= VARIÁVEIS E RESET ================= */
+:root {
+  --primary-color: #4CAF50;
+  --primary-hover: #29c729;
+  --danger-color: #e74c3c;
+  --danger-hover: #c0392b;
+  --background-light: #f3f4f6;
+  --text-dark: #333;
+  --text-light: #666;
+  --border-radius: 12px;
+  --shadow: 0 4px 15px rgba(0,0,0,0.1);
+  --transition: all 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--background-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* ================= LAYOUT PRINCIPAL ================= */
+.screen {
+  width: 500px;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  position: relative;
+}
+
+.screen.active { display: flex; }
+
+.main-layout {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100vw;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ================= COMPONENTES DE BOTÃO ================= */
+.btn {
+  background: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.btn:hover { background: var(--primary-hover); }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
+
+.btn-danger {
+  background: var(--danger-color) !important;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.btn-danger:hover { background: var(--danger-hover) !important; }
+.btn-danger:disabled { background: #ccc !important; cursor: not-allowed; }
+
+.nav-btn {
+  font-size: 2rem;
+  padding: 8px 20px;
+  background: white;
+  color: var(--primary-color);
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: var(--transition);
+}
+
+.nav-btn:hover { background: #c7f9cc; }
+
+.refresh-btn {
+  background: rgba(52, 152, 219, 0.9) !important;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.refresh-btn:hover { 
+  background: #2980b9 !important; 
+  transform: rotate(90deg) scale(1.1); 
+}
+
+/* ================= CALENDÁRIO ================= */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  background: var(--primary-color);
+  color: white;
+  padding: 24px 0 16px;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 0 16px 8px;
+  background: #e0e0e0;
+  border-radius: 8px 8px 0 0;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #555;
+  text-align: center;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 16px;
+  background: #e0e0e0;
+  min-height: 400px;
+}
+
+.day {
+  background: #f9f9f9;
+  border-radius: 8px;
+  height: 60px;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  position: relative;
+}
+
+.day.empty { background: transparent; box-shadow: none; cursor: default; }
+.day.today { background: var(--primary-color); color: white; font-weight: bold; }
+.day.has-boletos { background: #ffe066; position: relative; }
+
+.day.has-boletos::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #ff6b6b;
+  border-radius: 50%;
+  border: 1px solid #fff;
+}
+
+.day.today.has-boletos { 
+  background: linear-gradient(135deg, var(--primary-color) 70%, #ffe066 30%); 
+}
+
+.day:hover:not(.empty) { background: #c7f9cc; transform: scale(1.05); }
+
+/* ================= MODAL E FORMULÁRIOS ================= */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #f2f2f2;
+  padding: 28px 22px;
+  border-radius: 14px;
+  min-width: 420px;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* ================= FORMULÁRIOS ================= */
+#add-boleto-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  background: #eaeaea;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+#add-boleto-form input,
+#add-boleto-form select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  background: #fafafa;
+}
+
+#add-boleto-form input:focus,
+#add-boleto-form select:focus {
+  outline: 2px solid var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* ================= LISTA DE BOLETOS ================= */
+.boletos-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.boletos-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.boletos-list-block {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 8px 6px 12px;
+  margin-bottom: 8px;
+  max-width: 100%;
+  max-height: 240px;
+  overflow: hidden;
+}
+
+.boletos-list-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #bdbdbd #f3f4f6;
+}
+
+#modal-boletos-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#modal-boletos-list li {
+  background: #f3f3f3;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: var(--transition);
+  line-height: 1.3;
+}
+
+#modal-boletos-list li:hover { background: #e9e9e9; }
+#modal-boletos-list li.selecionado { 
+  background: #c7f9cc; 
+  border-left: 4px solid var(--primary-color); 
+  font-weight: bold; 
+}
+
+/* ================= TABELA DE BOLETOS ================= */
+.boletos-table-container {
+  background: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  padding: 12px 8px;
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.boletos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.boletos-table th {
+  background: var(--primary-color);
+  color: white;
+  font-weight: bold;
+  padding: 8px 4px;
+  text-align: left;
+}
+
+.boletos-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid #eee;
+}
+
+.boletos-table tfoot td {
+  font-weight: bold;
+  background: #f3f3f3;
+  padding: 8px 4px;
+}
+
+/* ================= COMPONENTES ESPECÍFICOS ================= */
+.mensal-aba { display: flex; flex-direction: column; gap: 6px; }
+.mensal-input { display: inline-flex; align-items: center; gap: 8px; }
+.mensal-preview, .hint { color: var(--text-light); font-size: 0.9em; }
+.boletos-actions { display: flex; justify-content: center; margin-top: 10px; }
+
+.boleto-form-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.boleto-form-table td {
+  padding: 6px 4px;
+  vertical-align: top;
+}
+
+.boleto-form-table td:first-child {
+  width: 40%;
+  text-align: right;
+  padding-right: 12px;
+  font-weight: 500;
+}
+
+.boleto-form-table td:last-child { width: 60%; }
+.save-btn-cell { text-align: center !important; padding-top: 12px !important; }
