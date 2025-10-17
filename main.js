@@ -51,12 +51,10 @@ function createWindow() {
     // Remove o menu padrão do Electron (File/Edit/View/Window/Help)
     Menu.setApplicationMenu(null);
 
-    // Define ícone da janela (usa .ico no Windows, com fallback para .png)
-    const icoPath = path.join(__dirname, 'assets', 'app-icon.ico');
-    const pngPath = path.join(__dirname, 'assets', 'app-icon.png');
-    const winIcon = nativeImage.createFromPath(icoPath).isEmpty()
-        ? nativeImage.createFromPath(pngPath)
-        : nativeImage.createFromPath(icoPath);
+    // Define ícone da janela: em dev usa build/icon.ico; em produção o executável já contém o ícone.
+    const devIco = path.join(__dirname, 'build', 'icon.ico');
+    const devIcon = nativeImage.createFromPath(devIco);
+    const winIcon = devIcon.isEmpty() ? undefined : devIcon;
 
     const mainWindow = new BrowserWindow({
         width: 1200,
@@ -153,7 +151,7 @@ function registerIpcHandlers() {
 app.whenReady().then(() => {
     // Define App User Model ID no Windows para fixar ícone na barra de tarefas
     if (process.platform === 'win32') {
-        app.setAppUserModelId('com.gestorgastos.app');
+        app.setAppUserModelId('com.edson.gestorgastos');
     }
 
     if (!initializeDatabase()) {
