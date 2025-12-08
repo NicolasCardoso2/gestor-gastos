@@ -25,11 +25,12 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 20px;
 }
 
 /* ================= LAYOUT PRINCIPAL ================= */
 .screen {
-  width: 500px;
+  width: 580px;
   background: white;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
@@ -37,18 +38,20 @@ body {
   display: none;
   flex-direction: column;
   position: relative;
+  margin: 10px;
 }
 
 .screen.active { display: flex; }
 
 .main-layout {
   display: flex;
-  gap: 32px;
+  gap: 48px;
   align-items: flex-start;
   justify-content: center;
   width: 100vw;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 /* ================= COMPONENTES DE BOTÃO ================= */
@@ -93,26 +96,37 @@ body {
 
 .nav-btn:hover { background: #c7f9cc; }
 
-.refresh-btn {
-  background: rgba(52, 152, 219, 0.9) !important;
-  border: none;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 50%;
+.btn-today {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
   cursor: pointer;
-  font-size: 1rem;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease, background 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  backdrop-filter: blur(6px);
 }
 
-.refresh-btn:hover { 
-  background: #2980b9 !important; 
-  transform: rotate(90deg) scale(1.1); 
+.btn-today:hover {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
+}
+
+.btn-today:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+.btn-today svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
 }
 
 /* ================= CALENDÁRIO ================= */
@@ -123,10 +137,16 @@ body {
   gap: 32px;
   background: var(--primary-color);
   color: white;
-  padding: 24px 0 16px;
+  padding: 24px 20px 16px;
   border-radius: var(--border-radius) var(--border-radius) 0 0;
   position: relative;
   flex-wrap: wrap;
+}
+
+@keyframes highlight {
+  0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
 }
 
 .weekdays {
@@ -186,7 +206,7 @@ body {
   background: linear-gradient(135deg, var(--primary-color) 70%, #ffe066 30%); 
 }
 
-.day:hover:not(.empty) { background: #c7f9cc; transform: scale(1.05); }
+.day:hover:not(.empty) { background: #c7f9cc; }
 
 /* ================= MODAL E FORMULÁRIOS ================= */
 .modal {
@@ -297,8 +317,9 @@ body {
   padding: 8px 10px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   cursor: pointer;
-  transition: var(--transition);
+  transition: background-color 0.15s ease;
   line-height: 1.3;
+  will-change: background-color;
 }
 
 #modal-boletos-list li:hover { background: #e9e9e9; }
@@ -313,9 +334,27 @@ body {
   background: #fff;
   border-radius: var(--border-radius);
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  padding: 12px 8px;
-  min-width: 180px;
-  max-width: 220px;
+  padding: 32px 24px;
+  min-width: 320px;
+  max-width: 380px;
+  margin: 10px;
+}
+
+.boletos-table-container h2 {
+  color: var(--text-dark);
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+  text-align: center;
+}
+
+.boletos-table-container .current-date-indicator {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
 }
 
 .boletos-table {
@@ -345,11 +384,313 @@ body {
   padding: 8px 4px;
 }
 
+/* ================= NAVEGAÇÃO ================= */
+.navigation-bar {
+  display: flex;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin: 24px 0 16px 0;
+  overflow: hidden;
+  justify-content: center;
+}
+
+.nav-tab {
+  flex: 1;
+  background: #f8f9fa;
+  border: none;
+  padding: 16px 32px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: var(--transition);
+  color: var(--text-dark);
+}
+
+.nav-tab:hover { background: #e9ecef; }
+.nav-tab.active { background: var(--primary-color); color: white; }
+
+/* ================= RELATÓRIO MENSAL ================= */
+.report-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.report-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.report-controls select {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9rem;
+}
+
+.report-content {
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  border-left: 4px solid var(--primary-color);
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-dark);
+}
+
+.report-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.monthly-table th {
+  background: var(--primary-color);
+  color: white;
+  padding: 10px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.monthly-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.monthly-table tr:hover {
+  background: #f8f9fa;
+}
+
+.chart-container {
+  text-align: center;
+}
+
+.chart-container h3 {
+  margin-bottom: 16px;
+  color: var(--text-dark);
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* ================= NAVEGAÇÃO E RELATÓRIO ================= */
+.navigation-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  padding: 4px;
+}
+
+.nav-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+  color: var(--text-light);
+}
+
+.nav-tab.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.nav-tab:hover:not(.active) {
+  background: #e0e0e0;
+}
+
+.report-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.report-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.report-controls select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: white;
+  font-size: 0.9rem;
+}
+
+.report-content {
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  background: #f8f9ff;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.summary-item {
+  text-align: center;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.report-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.monthly-table th {
+  background: var(--primary-color);
+  color: white;
+  padding: 12px 8px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+}
+
+.monthly-table td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.chart-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 16px;
+  text-align: center;
+}
+
+.chart-container h3 {
+  margin-bottom: 16px;
+  color: var(--text-dark);
+}
+
+.chart-container canvas {
+  max-width: 100%;
+  height: 250px !important;
+}
+
+.chart-legend {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
 /* ================= COMPONENTES ESPECÍFICOS ================= */
 .mensal-aba { display: flex; flex-direction: column; gap: 6px; }
 .mensal-input { display: inline-flex; align-items: center; gap: 8px; }
 .mensal-preview, .hint { color: var(--text-light); font-size: 0.9em; }
-.boletos-actions { display: flex; justify-content: center; margin-top: 10px; }
 
 .boleto-form-table {
   width: 100%;
@@ -370,3 +711,379 @@ body {
 
 .boleto-form-table td:last-child { width: 60%; }
 .save-btn-cell { text-align: center !important; padding-top: 12px !important; }
+
+/* ================= BOTÃO RELATÓRIO ANUAL ================= */
+.annual-report-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #3498db;
+  border: none;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.annual-report-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.annual-report-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ================= MODAL RELATÓRIO ANUAL ================= */
+.annual-modal-content {
+  width: 450px;
+  max-width: 90vw;
+  padding: 32px;
+}
+
+.annual-modal-content h2 {
+  text-align: center;
+  color: var(--text-dark);
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 16px;
+}
+
+.annual-stats {
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.stat-item.highlight .stat-value {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.stat-value:hover {
+  transition: var(--transition);
+}
+
+.stat-value[style*="underline"]:hover {
+  color: #2980b9;
+  transform: scale(1.05);
+}
+
+.stat-item:nth-child(2) .stat-value {
+  color: #e67e22;
+  font-weight: 600;
+}
+
+.annual-chart-placeholder {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  border: 1px dashed #ddd;
+}
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.year-selector label {
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.year-selector select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+}
+
+/* ================= BOTÕES FLUTUANTES ================= */
+.floating-buttons {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1000;
+}
+
+.floating-btn {
+  border: none;
+  color: white;
+  padding: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-btn {
+  background: #666;
+}
+
+.settings-btn:hover { 
+  background: #555;
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+}
+
+.restart-btn {
+  background: #e74c3c;
+}
+
+.restart-btn:hover {
+  background: #c0392b;
+  transform: rotate(-180deg) scale(1.1);
+  box-shadow: 0 6px 25px rgba(231, 76, 60, 0.4);
+}
+
+.floating-btn svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+/* ================= MODAL CONFIGURAÇÕES ================= */
+.settings-modal .modal-content {
+  width: 500px;
+  max-width: 90vw;
+  padding: 32px;
+}
+
+.settings-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Separador visual entre seções */
+.settings-section:not(:last-child)::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ddd, transparent);
+  margin: 16px 0 0 0;
+  position: absolute;
+  bottom: -16px;
+  left: 0;
+}
+
+.settings-section {
+  position: relative;
+}
+
+.settings-section h3 {
+  color: var(--text-dark);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.settings-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.backup-btn {
+  background: #3498db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.backup-btn:hover { 
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.import-btn {
+  background: #e67e22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.import-btn:hover { 
+  background: #d35400;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+}
+
+.export-btn {
+  background: #9b59b6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.export-btn:hover { 
+  background: #8e44ad;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+}
+
+.backup-info {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-top: 16px;
+}
+
+.backup-info br {
+  margin-bottom: 8px;
+}
+
+.backup-info strong {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.backup-info .info-line {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.backup-info .info-line:last-child {
+  margin-bottom: 0;
+}
+
+.app-info {
+  color: var(--text-dark);
+  line-height: 1.6;
+  text-align: center;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.app-info p {
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.app-info strong {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+/* Melhorias adicionais para o modal */
+.settings-modal h2 {
+  text-align: center;
+  color: var(--text-dark);
+  margin-bottom: 40px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.settings-buttons .btn {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+  .settings-modal .modal-content {
+    width: 95vw;
+    margin: 10px;
+    padding: 24px 16px;
+  }
+  
+  .settings-section {
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .settings-buttons .btn {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+}

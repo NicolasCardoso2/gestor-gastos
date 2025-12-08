@@ -29,7 +29,35 @@ const elements = {
     modalBoletoMeses: document.getElementById('modal-boleto-meses'),
     modalBoletoMesesPreview: document.getElementById('modal-boleto-meses-preview'),
     cancelEditBtn: document.getElementById('cancel-edit-btn'),
-    refreshBtn: document.getElementById('refresh-btn')
+    btnToday: document.getElementById('btn-today'),
+    // Elementos do relatório
+    navCalendar: document.getElementById('nav-calendar'),
+    navReport: document.getElementById('nav-report'),
+    reportScreen: document.getElementById('report-screen'),
+    reportMonth: document.getElementById('report-month'),
+    reportYear: document.getElementById('report-year'),
+    totalMonth: document.getElementById('total-month'),
+    averageDaily: document.getElementById('average-daily'),
+    maxDaily: document.getElementById('max-daily'),
+    monthlyTable: document.querySelector('#monthly-table tbody'),
+    categoryChart: document.getElementById('category-chart'),
+    chartLegend: document.getElementById('chart-legend'),
+    // Elementos do relatório anual
+    annualReportBtn: document.getElementById('annual-report-btn'),
+    annualReportModal: document.getElementById('annual-report-modal'),
+    closeAnnualModalBtn: document.getElementById('close-annual-modal'),
+    highestMonth: document.getElementById('highest-month'),
+    highestMonthValue: document.getElementById('highest-month-value'),
+    yearTotal: document.getElementById('year-total'),
+    annualYear: document.getElementById('annual-year'),
+    // Elementos de configurações
+    settingsBtn: document.getElementById('settings-btn'),
+    restartBtn: document.getElementById('restart-btn'),
+    settingsModal: document.getElementById('settings-modal'),
+    closeSettingsModalBtn: document.getElementById('close-settings-modal'),
+    createBackupBtn: document.getElementById('create-backup-btn'),
+    importDataBtn: document.getElementById('import-data-btn'),
+    exportDataBtn: document.getElementById('export-data-btn')
 };
 
 const config = {
@@ -125,8 +153,24 @@ const calendarManager = {
             const dateStr = utils.formatDate(new Date(state.currentYear, state.currentMonth, day));
             dayEl.textContent = day;
             dayEl.addEventListener('click', () => modalManager.openDetails(day));
-            dayEl.addEventListener('mouseenter', () => tableManager.updateBoletosTable(dateStr));
-            dayEl.addEventListener('mouseleave', () => tableManager.updateBoletosTable());
+            
+            // Otimizar hover para evitar flicker - só atualizar se data for diferente
+            let lastHoveredDate = null;
+            dayEl.addEventListener('mouseenter', () => {
+                if (lastHoveredDate !== dateStr) {
+                    tableManager.updateBoletosTable(dateStr);
+                    lastHoveredDate = dateStr;
+                }
+            });
+            dayEl.addEventListener('mouseleave', () => {
+                setTimeout(() => {
+                    const currentDate = utils.formatDate();
+                    if (lastHoveredDate !== currentDate) {
+                        tableManager.updateBoletosTable();
+                        lastHoveredDate = currentDate;
+                    }
+                }, 100); // Pequeno delay para evitar flicker
+            });
             
             if (dateStr === utils.formatDate()) dayEl.classList.add('today');
             if (state.expenses[dateStr]?.length > 0) {
@@ -199,7 +243,9 @@ const modalManager = {
         elements.modalDate.textContent = `Dia ${day} de ${config.monthNames[state.currentMonth]} de ${state.currentYear}`;
         modalManager.updateBoletosList(dateStr);
         elements.boletosModal.style.display = 'flex';
-        elements.addBoletoForm.style.display = 'none';
+        if (elements.addBoletoForm) {
+            elements.addBoletoForm.style.display = 'none';
+        }
         formManager.resetFormState();
     },
 
@@ -255,22 +301,21 @@ const modalManager = {
 
 /* =================(GERENCIAMENTO DE FORMULÁRIOS)================= */
 const formManager = {
-    resetFormState: () => {
-        state.isEditing = false;
-        state.selectedBoletoIndex = null;
-        elements.addBoletoBtn.textContent = 'Adicionar';
-        elements.editarBoletoBtn.disabled = elements.deletarBoletoBtn.disabled = true;
-        elements.cancelEditBtn.style.display = 'none';
-        elements.addBoletoForm.reset();
-        
-        elements.addBoletoForm.querySelectorAll('input, select').forEach(input => {
-            input.disabled = false;
-            input.style.color = '';
-        });
-        
-        document.querySelectorAll('#modal-boletos-list li').forEach(item => 
-            item.classList.remove('selecionado'));
-    },
+        resetFormState: () => {
+                state.isEditing = false;
+                state.selectedBoletoIndex = null;
+                elements.addBoletoBtn.textContent = 'Adicionar';
+                elements.editarBoletoBtn.disabled = elements.deletarBoletoBtn.disabled = true;
+                if (elements.cancelEditBtn) elements.cancelEditBtn.style.display = 'none';
+
+                if (elements.addBoletoForm) {
+                        elements.addBoletoForm.reset();
+                        elements.addBoletoForm.style.display = 'none';
+                }
+
+                document.querySelectorAll('#modal-boletos-list li').forEach(item =>
+                        item.classList.remove('selecionado'));
+        },
 
     openEditBoleto: () => {
         if (state.selectedBoletoIndex === null || !state.expenses[state.selectedDate]) return;
@@ -283,11 +328,15 @@ const formManager = {
         elements.modalBoletoValor.value = boleto.valor || '';
         elements.modalBoletoObs.value = boleto.obs || '';
         elements.modalBoletoRepeticao.value = boleto.repeticao || 'unica';
-        
+
         formManager.toggleMesesField(boleto.repeticao === 'mensal', boleto.meses);
-        
-        elements.addBoletoForm.style.display = 'block';
-        elements.cancelEditBtn.style.display = 'inline-block';
+
+        if (elements.addBoletoForm) {
+            elements.addBoletoForm.style.display = 'block';
+        }
+        if (elements.cancelEditBtn) {
+            elements.cancelEditBtn.style.display = 'inline-block';
+        }
     },
 
     toggleMesesField: (show, meses = '') => {
@@ -357,9 +406,13 @@ const formManager = {
         if (confirm('Tem certeza que deseja deletar este boleto?')) {
             repetitionManager.deletarBoletosRepetidos(boleto);
             stateManager.removeExpense(state.selectedDate, state.selectedBoletoIndex);
+            
+            // Atualizar interface
             modalManager.updateBoletosList(state.selectedDate);
             tableManager.updateBoletosTable(state.selectedDate);
             calendarManager.createCalendar();
+
+            // Resetar estado do formulário e botões
             formManager.resetFormState();
         }
     }
@@ -409,6 +462,591 @@ const repetitionManager = {
     }
 };
 
+/* =================(GERENCIAMENTO DO RELATÓRIO MENSAL)================= */
+const reportManager = {
+    currentChart: null,
+
+    initializeReport: () => {
+        // Preencher anos (2025 em diante + próximos 8)
+        const currentYear = new Date().getFullYear();
+        const startYear = 2025;
+        elements.reportYear.innerHTML = '';
+        for (let year = startYear; year <= currentYear + 8; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === currentYear) option.selected = true;
+            elements.reportYear.appendChild(option);
+        }
+        
+        // Definir mês atual
+        elements.reportMonth.value = new Date().getMonth().toString();
+        
+        reportManager.updateReport();
+    },
+
+    updateReport: () => {
+        const selectedMonth = parseInt(elements.reportMonth.value);
+        const selectedYear = parseInt(elements.reportYear.value);
+        
+        const monthlyData = reportManager.aggregateMonthlyData(selectedMonth, selectedYear);
+        reportManager.updateTable(monthlyData);
+        reportManager.updateSummary(monthlyData);
+        reportManager.updateChart(monthlyData);
+    },
+
+    aggregateMonthlyData: (month, year) => {
+        const daysInMonth = utils.getDaysInMonth(month, year);
+        const dailyTotals = [];
+        const categoryTotals = {};
+        let totalMonth = 0;
+        let maxDaily = 0;
+
+        // Processar cada dia do mês
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = utils.formatDate(new Date(year, month, day));
+            const dayExpenses = state.expenses[dateStr] || [];
+            
+            let dayTotal = 0;
+            dayExpenses.forEach(expense => {
+                const value = parseFloat(expense.valor || 0);
+                dayTotal += value;
+                
+                // Agregar por categoria
+                const category = expense.tipo || 'Outros';
+                categoryTotals[category] = (categoryTotals[category] || 0) + value;
+            });
+            
+            dailyTotals.push({ day, total: dayTotal });
+            totalMonth += dayTotal;
+            if (dayTotal > maxDaily) maxDaily = dayTotal;
+        }
+
+        return {
+            dailyTotals,
+            categoryTotals,
+            totalMonth,
+            maxDaily,
+            averageDaily: totalMonth / daysInMonth
+        };
+    },
+
+    updateTable: (data) => {
+        elements.monthlyTable.innerHTML = '';
+        
+        data.dailyTotals.forEach(({ day, total }) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${day.toString().padStart(2, '0')}</td>
+                <td>${utils.formatCurrency(total)}</td>
+            `;
+            if (total > 0) {
+                tr.style.backgroundColor = '#f8f9ff';
+            }
+            elements.monthlyTable.appendChild(tr);
+        });
+    },
+
+    updateSummary: (data) => {
+        elements.totalMonth.textContent = utils.formatCurrency(data.totalMonth);
+        elements.averageDaily.textContent = utils.formatCurrency(data.averageDaily);
+        elements.maxDaily.textContent = utils.formatCurrency(data.maxDaily);
+    },
+
+    updateChart: (data) => {
+        if (reportManager.currentChart) {
+            reportManager.currentChart.destroy();
+        }
+
+        const categories = Object.keys(data.categoryTotals);
+        const values = Object.values(data.categoryTotals);
+        
+        if (categories.length === 0) {
+            elements.chartLegend.innerHTML = '<p>Nenhum dado para o período selecionado</p>';
+            return;
+        }
+
+        // Cores para as categorias
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+        ];
+
+        const ctx = elements.categoryChart.getContext('2d');
+        reportManager.currentChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, categories.length),
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Criar legenda customizada
+        reportManager.createLegend(categories, values, colors, data.totalMonth);
+    },
+
+    createLegend: (categories, values, colors, totalMonth) => {
+        elements.chartLegend.innerHTML = '';
+        
+        categories.forEach((category, index) => {
+            const percentage = ((values[index] / totalMonth) * 100).toFixed(1);
+            
+            const legendItem = document.createElement('div');
+            legendItem.className = 'legend-item';
+            legendItem.innerHTML = `
+                <div class="legend-color" style="background-color: ${colors[index]}"></div>
+                <span>${category}: ${utils.formatCurrency(values[index])} (${percentage}%)</span>
+            `;
+            elements.chartLegend.appendChild(legendItem);
+        });
+    }
+};
+
+/* =================(GERENCIAMENTO DE NAVEGAÇÃO)================= */
+const navigationManager = {
+    switchToCalendar: () => {
+        elements.navCalendar.classList.add('active');
+        elements.navReport.classList.remove('active');
+        elements.calendarScreen.classList.add('active');
+        elements.reportScreen.classList.remove('active');
+    },
+
+    switchToReport: () => {
+        elements.navReport.classList.add('active');
+        elements.navCalendar.classList.remove('active');
+        elements.reportScreen.classList.add('active');
+        elements.calendarScreen.classList.remove('active');
+        reportManager.updateReport();
+    }
+};
+
+/* =================(GERENCIAMENTO DE RELATÓRIO ANUAL)================= */
+const annualReportManager = {
+    currentHighestMonth: 0,
+    currentHighestYear: new Date().getFullYear(),
+    hasValidData: false,
+    
+    openModal: () => {
+        elements.annualReportModal.style.display = 'block';
+        annualReportManager.updateAnnualReport();
+    },
+    
+    closeModal: () => {
+        elements.annualReportModal.style.display = 'none';
+    },
+    
+    navigateToMonth: () => {
+        // Verificar se há dados válidos para navegar
+        if (!annualReportManager.hasValidData) {
+            console.log('Não há dados válidos para navegar');
+            return;
+        }
+        
+        // Fechar modal
+        annualReportManager.closeModal();
+        
+        // Navegar para o calendário do mês com mais gastos
+        state.currentMonth = annualReportManager.currentHighestMonth;
+        state.currentYear = annualReportManager.currentHighestYear;
+        
+        console.log(`Navegando para: ${config.monthNames[state.currentMonth]} ${state.currentYear}`);
+        
+        // Mudar para a tela do calendário
+        navigationManager.switchToCalendar();
+        
+        // Atualizar display do calendário
+        calendarManager.updateCalendarDisplay();
+        calendarManager.loadCalendarData();
+    },
+
+    initializeAnnualReport: () => {
+        annualReportManager.populateYearSelector();
+    },
+
+    populateYearSelector: () => {
+        const currentYear = new Date().getFullYear();
+        elements.annualYear.innerHTML = '';
+        
+        // Adiciona anos de 2020 até o ano atual + 1
+        for (let year = 2020; year <= currentYear + 1; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === currentYear) {
+                option.selected = true;
+            }
+            elements.annualYear.appendChild(option);
+        }
+    },
+
+    updateAnnualReport: async () => {
+        console.log('=== INICIANDO RELATÓRIO ANUAL ===');
+        const selectedYear = parseInt(elements.annualYear.value);
+        console.log('DEBUG: Ano selecionado:', selectedYear);
+        console.log('DEBUG: Data atual:', new Date().toISOString());
+        
+        try {
+            // Buscar todos os boletos
+            const boletos = await window.api.boletos.get();
+            console.log(`DEBUG: Encontrados ${boletos.length} boletos na base de dados`);
+            
+            // Verificar se API de gastos existe
+            let gastos = [];
+            try {
+                if (window.api.gastos && window.api.gastos.get) {
+                    gastos = await window.api.gastos.get();
+                    console.log(`DEBUG: Encontrados ${gastos.length} gastos na base de dados`);
+                } else {
+                    console.log('DEBUG: API de gastos não disponível - usando apenas boletos');
+                }
+            } catch (gastoError) {
+                console.log('DEBUG: Erro ao buscar gastos:', gastoError);
+            }
+            
+            // Filtrar e processar boletos do ano
+            const yearBoletos = [];
+            boletos.forEach(boleto => {
+                console.log('Processando boleto:', boleto);
+                try {
+                    let boletoDate;
+                    const dataStr = boleto.data;
+                    
+                    if (dataStr.includes('-')) {
+                        // Formato YYYY-MM-DD (ISO)
+                        boletoDate = new Date(dataStr);
+                    } else if (dataStr.includes('/')) {
+                        // Formato DD/MM/YYYY (brasileiro)
+                        const parts = dataStr.split('/');
+                        if (parts.length === 3) {
+                            boletoDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                    } else {
+                        boletoDate = new Date(dataStr);
+                    }
+                    
+                    const boletoYear = boletoDate.getFullYear();
+                    console.log(`Boleto: ${boleto.nome}, Data: ${dataStr}, Ano: ${boletoYear}, Valor: ${boleto.valor}`);
+                    
+                    if (!isNaN(boletoYear) && boletoYear === selectedYear) {
+                        yearBoletos.push(boleto);
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar boleto:', boleto, error);
+                }
+            });
+            
+            // Filtrar gastos do ano (se existirem)
+            const yearGastos = [];
+            if (gastos && gastos.length > 0) {
+                gastos.forEach(gasto => {
+                    try {
+                        let gastoDate;
+                        const dataStr = gasto.data;
+                        
+                        if (dataStr.includes('-')) {
+                            gastoDate = new Date(dataStr);
+                        } else if (dataStr.includes('/')) {
+                            const parts = dataStr.split('/');
+                            if (parts.length === 3) {
+                                gastoDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                        } else {
+                            gastoDate = new Date(dataStr);
+                        }
+                        
+                        const gastoYear = gastoDate.getFullYear();
+                        if (!isNaN(gastoYear) && gastoYear === selectedYear) {
+                            yearGastos.push(gasto);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao processar gasto:', gasto, error);
+                    }
+                });
+            }
+
+            console.log('Boletos filtrados do ano:', yearBoletos.length, yearBoletos);
+            console.log('Gastos filtrados do ano:', yearGastos.length, yearGastos);
+
+            // Calcular gastos por mês
+            const monthlyTotals = {};
+            const monthNames = config.monthNames;
+            
+            // Inicializar todos os meses com 0
+            for (let i = 0; i < 12; i++) {
+                monthlyTotals[i] = 0;
+            }
+
+            // Somar boletos por mês
+            yearBoletos.forEach(boleto => {
+                try {
+                    let boletoDate;
+                    const dataStr = boleto.data;
+                    
+                    if (dataStr.includes('-')) {
+                        boletoDate = new Date(dataStr);
+                    } else if (dataStr.includes('/')) {
+                        const parts = dataStr.split('/');
+                        if (parts.length === 3) {
+                            boletoDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                    } else {
+                        boletoDate = new Date(dataStr);
+                    }
+                    
+                    const month = boletoDate.getMonth();
+                    const valor = parseFloat(boleto.valor) || 0;
+                    
+                    console.log(`Adicionando boleto ${boleto.nome}: R$ ${valor} ao mês ${month} (${monthNames[month]})`);
+                    
+                    if (!isNaN(month) && month >= 0 && month <= 11 && valor > 0) {
+                        monthlyTotals[month] += valor;
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar boleto para somatória:', boleto, error);
+                }
+            });
+            
+            // Somar gastos por mês
+            yearGastos.forEach(gasto => {
+                try {
+                    let gastoDate;
+                    const dataStr = gasto.data;
+                    
+                    if (dataStr.includes('-')) {
+                        gastoDate = new Date(dataStr);
+                    } else if (dataStr.includes('/')) {
+                        const parts = dataStr.split('/');
+                        if (parts.length === 3) {
+                            gastoDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                    } else {
+                        gastoDate = new Date(dataStr);
+                    }
+                    
+                    const month = gastoDate.getMonth();
+                    const valor = parseFloat(gasto.valor) || 0;
+                    
+                    console.log(`Adicionando gasto ${gasto.descricao || 'Sem descrição'}: R$ ${valor} ao mês ${month} (${monthNames[month]})`);
+                    
+                    if (!isNaN(month) && month >= 0 && month <= 11 && valor > 0) {
+                        monthlyTotals[month] += valor;
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar gasto para somatória:', gasto, error);
+                }
+            });
+
+            console.log('DEBUG: Totais por mês:', monthlyTotals);
+            
+            // DEBUG: Mostrar se encontrou algum valor > 0
+            const mesesComValor = Object.entries(monthlyTotals).filter(([mes, valor]) => valor > 0);
+            console.log(`DEBUG: ${mesesComValor.length} meses com valores > 0:`, mesesComValor.map(([mes, valor]) => `${monthNames[mes]}: R$ ${valor.toFixed(2)}`));
+
+            // Encontrar mês com maior gasto
+            let highestMonth = 0;
+            let highestValue = 0;
+            let yearTotal = 0;
+
+            Object.entries(monthlyTotals).forEach(([month, value]) => {
+                yearTotal += value;
+                if (value > highestValue) {
+                    highestValue = value;
+                    highestMonth = parseInt(month);
+                }
+            });
+
+            console.log('Mês com maior gasto:', highestMonth, monthNames[highestMonth], 'Valor:', highestValue);
+            console.log('Total do ano:', yearTotal);
+
+            // Média mensal removida - informação redundante
+
+            // Armazenar dados para navegação
+            annualReportManager.currentHighestMonth = highestMonth;
+            annualReportManager.currentHighestYear = selectedYear;
+            
+            // Atualizar interface com verificações adicionais
+            console.log(`RESULTADO: ${yearBoletos.length + yearGastos.length} registros processados para ${selectedYear}`);
+            console.log(`RESULTADO: Mês com mais gastos - ${monthNames[highestMonth]}: R$ ${highestValue.toFixed(2)}`);
+            console.log(`RESULTADO: Total do ano ${selectedYear}: R$ ${yearTotal.toFixed(2)}`);
+            
+            if (yearTotal > 0) {
+                annualReportManager.hasValidData = true;
+                elements.highestMonth.textContent = monthNames[highestMonth];
+                elements.highestMonth.style.cursor = 'pointer';
+                elements.highestMonth.style.textDecoration = 'underline';
+                elements.highestMonth.title = 'Clique para ir ao calendário deste mês';
+                elements.highestMonthValue.textContent = `R$ ${highestValue.toFixed(2).replace('.', ',')}`;
+                elements.yearTotal.textContent = `R$ ${yearTotal.toFixed(2).replace('.', ',')}`;
+            } else {
+                annualReportManager.hasValidData = false;
+                elements.highestMonth.textContent = 'Nenhum dado';
+                elements.highestMonth.style.cursor = 'default';
+                elements.highestMonth.style.textDecoration = 'none';
+                elements.highestMonth.title = 'Não há dados para exibir';
+                elements.highestMonthValue.textContent = 'R$ 0,00';
+                elements.yearTotal.textContent = 'R$ 0,00';
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar relatório anual:', error);
+            elements.highestMonth.textContent = 'Erro ao carregar';
+            elements.highestMonthValue.textContent = 'R$ 0,00';
+            elements.yearTotal.textContent = 'R$ 0,00';
+            elements.monthlyAverage.textContent = 'R$ 0,00';
+        }
+    }
+};
+
+/* =================(GERENCIAMENTO DE CONFIGURAÇÕES)================= */
+const settingsManager = {
+    openModal: () => {
+        elements.settingsModal.style.display = 'block';
+    },
+
+    closeModal: () => {
+        elements.settingsModal.style.display = 'none';
+    },
+
+    showToast: (message, type = 'success') => {
+        // Criar toast temporário
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : '#e74c3c'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 10000;
+            font-weight: bold;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Remover após 3 segundos
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+        
+        // Adicionar animações CSS se não existirem
+        if (!document.querySelector('#toast-animations')) {
+            const style = document.createElement('style');
+            style.id = 'toast-animations';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    },
+
+    createBackup: async () => {
+        try {
+            elements.createBackupBtn.disabled = true;
+            elements.createBackupBtn.textContent = 'Criando...';
+            
+            const result = await window.api.backup.create();
+            
+            if (result.success) {
+            settingsManager.showToast('Backup criado com sucesso!');
+            } else {
+                settingsManager.showToast('Erro ao criar backup', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao criar backup:', error);
+            settingsManager.showToast('Erro inesperado ao criar backup', 'error');
+        } finally {
+            elements.createBackupBtn.disabled = false;
+            elements.createBackupBtn.textContent = 'Criar Backup';
+        }
+    },
+
+    importData: async () => {
+        try {
+            elements.importDataBtn.disabled = true;
+            elements.importDataBtn.textContent = 'Importando...';
+            
+            const result = await window.api.backup.import();
+            
+            if (result.success) {
+                settingsManager.showToast('Dados importados com sucesso!');
+                settingsManager.closeModal();
+                
+                // Recarregar dados na interface
+                setTimeout(() => {
+                    tableManager.updateBoletosTable();
+                    calendarManager.loadCalendarData();
+                    reportManager.updateReport();
+                }, 500);
+            } else if (!result.cancelled) {
+                settingsManager.showToast('Erro ao importar dados', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao importar dados:', error);
+            settingsManager.showToast('Erro inesperado ao importar dados', 'error');
+        } finally {
+            elements.importDataBtn.disabled = false;
+            elements.importDataBtn.textContent = 'Importar Dados';
+        }
+    },
+
+    exportData: async () => {
+        try {
+            elements.exportDataBtn.disabled = true;
+            elements.exportDataBtn.textContent = 'Exportando...';
+            
+            const result = await window.api.backup.export();
+            
+            if (result.success) {
+                settingsManager.showToast('Dados exportados com sucesso!');
+            } else if (!result.cancelled) {
+                settingsManager.showToast('Erro ao exportar dados', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao exportar dados:', error);
+            settingsManager.showToast('Erro inesperado ao exportar dados', 'error');
+        } finally {
+            elements.exportDataBtn.disabled = false;
+            elements.exportDataBtn.textContent = 'Exportar Dados';
+        }
+    },
+
+    restartPage: () => {
+        if (confirm('Tem certeza que deseja recarregar a página?\n\nTodos os dados são salvos automaticamente.')) {
+            settingsManager.showToast('Recarregando página...', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+    }
+};
+
 /* =================(INICIALIZAÇÃO E EVENT LISTENERS)================= */
 const init = {
     setupEventListeners: () => {
@@ -424,8 +1062,37 @@ const init = {
         // Modal
         elements.closeModalBtn.addEventListener('click', modalManager.closeModal);
         elements.addBoletoBtn.addEventListener('click', () => {
-            formManager.resetFormState();
+            // Limpar estado
+            state.isEditing = false;
+            state.selectedBoletoIndex = null;
+            elements.addBoletoBtn.textContent = 'Adicionar';
+            elements.editarBoletoBtn.disabled = true;
+            elements.deletarBoletoBtn.disabled = true;
+            elements.cancelEditBtn.style.display = 'none';
+            
+            // Limpar seleções
+            document.querySelectorAll('#modal-boletos-list li').forEach(item => 
+                item.classList.remove('selecionado'));
+            
+            // Mostrar e limpar formulário
             elements.addBoletoForm.style.display = 'block';
+            elements.addBoletoForm.reset();
+            
+            // Garantir valores vazios
+            if (elements.modalBoletoType) elements.modalBoletoType.value = '';
+            if (elements.modalBoletoNome) elements.modalBoletoNome.value = '';
+            if (elements.modalBoletoValor) elements.modalBoletoValor.value = '';
+            if (elements.modalBoletoObs) elements.modalBoletoObs.value = '';
+            if (elements.modalBoletoRepeticao) {
+                elements.modalBoletoRepeticao.value = 'unica';
+                formManager.toggleMesesField(false);
+            }
+
+            setTimeout(() => {
+                if (elements.modalBoletoType) {
+                    elements.modalBoletoType.focus();
+                }
+            }, 50);
         });
 
         // Formulário
@@ -450,19 +1117,78 @@ const init = {
             });
         }
 
-        // Atualizar página
-        if (elements.refreshBtn) {
-            elements.refreshBtn.addEventListener('click', () => {
-                if (confirm('Deseja atualizar a página? Todos os dados não salvos serão perdidos.')) {
-                    location.reload();
-                }
+        // Voltar para hoje
+        if (elements.btnToday) {
+            elements.btnToday.addEventListener('click', () => {
+                const today = new Date();
+                state.currentMonth = today.getMonth();
+                state.currentYear = today.getFullYear();
+                
+                // Atualizar título e calendar
+                calendar.updateCalendarDisplay();
+                calendar.loadCalendarData();
+                
+                // Destacar o dia atual
+                setTimeout(() => {
+                    const todayElement = document.querySelector(`[data-day="${today.getDate()}"]`);
+                    if (todayElement) {
+                        todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        todayElement.style.animation = 'highlight 1s ease-in-out';
+                    }
+                }, 100);
             });
         }
+
+        // Navegação entre telas
+        elements.navCalendar.addEventListener('click', navigationManager.switchToCalendar);
+        elements.navReport.addEventListener('click', navigationManager.switchToReport);
+
+        // Controles do relatório
+        elements.reportMonth.addEventListener('change', reportManager.updateReport);
+        elements.reportYear.addEventListener('change', reportManager.updateReport);
+
+        // Relatório anual
+        elements.annualReportBtn.addEventListener('click', annualReportManager.openModal);
+        elements.closeAnnualModalBtn.addEventListener('click', annualReportManager.closeModal);
+        elements.annualYear.addEventListener('change', annualReportManager.updateAnnualReport);
+        elements.highestMonth.addEventListener('click', (e) => {
+            // Só permitir navegação se houver dados válidos
+            if (annualReportManager.hasValidData) {
+                annualReportManager.navigateToMonth();
+            } else {
+                console.log('Clique ignorado - não há dados válidos');
+                e.preventDefault();
+            }
+        });
+
+        // Fechar modal anual clicando fora
+        elements.annualReportModal.addEventListener('click', (e) => {
+            if (e.target === elements.annualReportModal) {
+                annualReportManager.closeModal();
+            }
+        });
+
+        // Configurações e backup
+        elements.settingsBtn.addEventListener('click', settingsManager.openModal);
+        elements.restartBtn.addEventListener('click', settingsManager.restartPage);
+        elements.closeSettingsModalBtn.addEventListener('click', settingsManager.closeModal);
+        elements.createBackupBtn.addEventListener('click', settingsManager.createBackup);
+        elements.importDataBtn.addEventListener('click', settingsManager.importData);
+        elements.exportDataBtn.addEventListener('click', settingsManager.exportData);
+
+        // Fechar modal de configurações clicando fora
+        elements.settingsModal.addEventListener('click', (e) => {
+            if (e.target === elements.settingsModal) {
+                settingsManager.closeModal();
+            }
+        });
     },
 
     initialize: () => {
         calendarManager.createCalendar();
         tableManager.updateBoletosTable();
+        reportManager.initializeReport();
+        annualReportManager.initializeAnnualReport();
         init.setupEventListeners();
     }
 };

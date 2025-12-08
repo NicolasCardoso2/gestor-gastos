@@ -22,8 +22,12 @@
           <tr><td><strong>Total</strong></td><td id="boletos-total">R$ 0,00</td></tr>
         </tfoot>
       </table>
-      <div class="boletos-actions">
-        <button id="refresh-btn" class="btn refresh-btn" title="Atualizar página">🔄</button>
+
+      
+      <!-- =================(NAVEGAÇÃO)================= -->
+      <div class="navigation-bar">
+        <button id="nav-calendar" class="nav-tab active">Calendário</button>
+        <button id="nav-report" class="nav-tab">Relatório Mensal</button>
       </div>
     </div>
 
@@ -33,12 +37,67 @@
         <button id="prev-month" class="btn nav-btn">◀</button>
         <h1 id="calendar-title">Outubro 2025</h1>
         <button id="next-month" class="btn nav-btn">▶</button>
+        <button id="btn-today" class="btn-today" type="button" title="Voltar para hoje" aria-label="Voltar para hoje">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </button>
       </header>
       <div class="weekdays">
         <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span>
         <span>Sex</span><span>Sáb</span><span>Dom</span>
       </div>
       <main id="calendar" class="calendar"></main>
+    </div>
+
+    <!-- =================(TELA RELATÓRIO MENSAL)================= -->
+    <div id="report-screen" class="screen">
+      <header class="report-header">
+        <h2>Relatório Mensal</h2>
+        <div class="report-controls">
+          <select id="report-month">
+            <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+            <option value="2">Março</option><option value="3">Abril</option>
+            <option value="4">Maio</option><option value="5">Junho</option>
+            <option value="6">Julho</option><option value="7">Agosto</option>
+            <option value="8">Setembro</option><option value="9">Outubro</option>
+            <option value="10">Novembro</option><option value="11">Dezembro</option>
+          </select>
+          <select id="report-year"></select>
+        </div>
+      </header>
+      <div class="report-content">
+        <div class="report-summary">
+          <div class="summary-item">
+            <span class="summary-label">Total do Mês:</span>
+            <span class="summary-value" id="total-month">R$ 0,00</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Média Diária:</span>
+            <span class="summary-value" id="average-daily">R$ 0,00</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Maior Gasto:</span>
+            <span class="summary-value" id="max-daily">R$ 0,00</span>
+          </div>
+        </div>
+        <div class="report-table-container">
+          <table id="monthly-table" class="monthly-table">
+            <thead>
+              <tr>
+                <th>Dia</th>
+                <th>Total Gasto</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="chart-container">
+          <h3>Gastos por Categoria</h3>
+          <canvas id="category-chart" width="400" height="300"></canvas>
+          <div id="chart-legend" class="chart-legend"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -55,6 +114,7 @@
           <option value="">Selecione...</option>
           <option value="Água">Água</option><option value="Luz">Luz</option>
           <option value="Internet">Internet</option><option value="Telefone">Telefone</option>
+          <option value="Imposto">Imposto</option><option value="Contadora">Contadora</option>
           <option value="Outro">Outro</option>
         </select>
         <label for="boleto-due">Vencimento:</label>
@@ -97,6 +157,7 @@
               <option value="Luz">Luz</option><option value="Água">Água</option>
               <option value="Internet">Internet</option><option value="Telefone">Telefone</option>
               <option value="Aluguel">Aluguel</option><option value="Cartão">Cartão</option>
+              <option value="Imposto">Imposto</option><option value="Contadora">Contadora</option>
               <option value="Outros">Outros</option>
             </select>
           </td>
@@ -144,6 +205,100 @@
     </form>
   </div>
 
+  <!-- =================(BOTÃO RELATÓRIO ANUAL)================= -->
+  <button id="annual-report-btn" class="annual-report-btn" title="Relatório Anual">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19,3H5C3.9,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.9 20.1,3 19,3M19,19H5V5H19V19M17,12H15V17H17V12M13,7H11V17H13V7M9,10H7V17H9V10Z"/>
+    </svg>
+    <span>Anual</span>
+  </button>
+
+  <!-- =================(MODAL RELATÓRIO ANUAL)================= -->
+  <div id="annual-report-modal" class="modal" style="display:none;">
+    <div class="modal-content annual-modal-content">
+      <span id="close-annual-modal" class="close">&times;</span>
+      <h2>Relatório Anual</h2>
+      
+      <div class="year-selector">
+        <label for="annual-year">Ano:</label>
+        <select id="annual-year"></select>
+      </div>
+
+      <div class="annual-stats">
+        <div class="stat-item highlight">
+          <span class="stat-label">Mês com mais gastos:</span>
+          <span class="stat-value" id="highest-month" title="Carregando...">Carregando...</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Valor deste mês:</span>
+          <span class="stat-value" id="highest-month-value">R$ 0,00</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total do ano:</span>
+          <span class="stat-value" id="year-total">R$ 0,00</span>
+        </div>
+      </div>
+
+      <div class="annual-chart-placeholder">
+        <p>Clique no mês destacado para navegar ao calendário daquele mês.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================(BOTÕES FLUTUANTES)================= -->
+  <div class="floating-buttons">
+    <button id="restart-btn" class="floating-btn restart-btn" title="Reiniciar Página">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
+      </svg>
+    </button>
+    <button id="settings-btn" class="floating-btn settings-btn" title="Configurações e Backup">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l1.86-1.41c.2-.15.25-.42.13-.64l-1.86-3.23c-.12-.22-.39-.3-.61-.22l-2.14.91c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35C8.66 5.59 8.12 5.92 7.63 6.29L5.49 5.38c-.22-.08-.49 0-.61.22L2.92 8.83c-.12.22-.07.49.13.64L4.91 11c-.04.33-.07.65-.07.97c0 .32.03.65.07.97l-1.86 1.41c-.2.15-.25.42-.13.64l1.86 3.23c.12.22.39.3.61.22l2.14-.91c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.14.91c.22.08.49 0 .61-.22l1.86-3.23c.12-.22.07-.49-.13-.64l-1.86-1.41z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- =================(MODAL CONFIGURAÇÕES)================= -->
+  <div id="settings-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="close-settings-modal" class="close">&times;</span>
+      <h2>Configurações e Backup</h2>
+      
+      <div class="settings-section">
+        <h3>Gerenciar Dados</h3>
+        <div class="settings-buttons">
+          <button id="create-backup-btn" class="btn backup-btn">
+            Criar Backup
+          </button>
+          <button id="import-data-btn" class="btn import-btn">
+            Importar Dados
+          </button>
+          <button id="export-data-btn" class="btn export-btn">
+            Exportar Dados
+          </button>
+        </div>
+        <div class="backup-info">
+          <div class="info-line">
+            <strong>Dica:</strong> Faça backups regulares dos seus dados para não perdê-los!
+          </div>
+          <div class="info-line">
+            <strong>Local dos dados:</strong> AppData\Roaming\Gestor de Gastos\database.db
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Informações</h3>
+        <div class="app-info">
+          <p><strong>Gestor de Gastos</strong> v1.0.0</p>
+          <p>Sistema de gestão financeira pessoal</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

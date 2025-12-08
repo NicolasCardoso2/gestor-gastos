@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, nativeImage, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const Database = require('better-sqlite3');
 
 /* =================(CONFIGURAÇÕES GLOBAIS)================= */
@@ -9,6 +10,124 @@ const DB_PATH = path.join(app.getPath('userData'), 'database.db');
 let db = null;
 
 /* =================(INICIALIZAÇÃO DO BANCO)================= */
+async function checkExistingDatabase() {
+    const userDataPath = app.getPath('userData');
+    const dbExists = fs.existsSync(DB_PATH);
+    
+    if (!dbExists) {
+        console.log('Primeira execução - criando novo banco de dados.');
+        return 'create_new';
+    }
+    
+    // Verifica se o banco tem dados
+    try {
+        const tempDb = new Database(DB_PATH, { readonly: true });
+        const boletoCount = tempDb.prepare('SELECT COUNT(*) as count FROM boletos').get();
+        const gastoCount = tempDb.prepare('SELECT COUNT(*) as count FROM gastos').get();
+        tempDb.close();
+        
+        const hasData = (boletoCount.count > 0 || gastoCount.count > 0);
+        
+        if (!hasData) {
+            console.log('Banco existe mas está vazio - usando banco existente.');
+            return 'use_existing';
+        }
+        
+        // Mostra dialog para o usuário escolher
+        const result = await dialog.showMessageBox(null, {
+            type: 'question',
+            buttons: [
+                'Manter Dados Existentes',
+                'Criar Backup e Começar Novo',
+                'Substituir por Dados Antigos',
+                'Cancelar'
+            ],
+            defaultId: 0,
+            title: 'Gestor de Gastos - Dados Encontrados',
+            message: 'Dados existentes foram encontrados!',
+            detail: `Encontrados:\n• ${boletoCount.count} boletos\n• ${gastoCount.count} gastos\n\nO que deseja fazer?`,
+            noLink: true,
+            cancelId: 3
+        });
+        
+        switch (result.response) {
+            case 0: return 'use_existing';
+            case 1: return 'backup_and_new';
+            case 2: return 'import_old';
+            case 3: 
+            default: return 'cancel';
+        }
+        
+    } catch (error) {
+        console.log('Erro ao verificar banco existente, criando novo:', error);
+        return 'create_new';
+    }
+}
+
+async function createBackup() {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = path.join(app.getPath('userData'), `database_backup_${timestamp}.db`);
+    
+    try {
+        fs.copyFileSync(DB_PATH, backupPath);
+        console.log(`Backup criado em: ${backupPath}`);
+        
+        await dialog.showMessageBox(null, {
+            type: 'info',
+            title: 'Backup Criado',
+            message: 'Backup dos dados criado com sucesso!',
+            detail: `Seus dados foram salvos em:\n${backupPath}\n\nVocê pode usar este arquivo para restaurar seus dados mais tarde.`,
+            buttons: ['OK']
+        });
+        
+        return backupPath;
+    } catch (error) {
+        console.error('Erro ao criar backup:', error);
+        return null;
+    }
+}
+
+async function importOldDatabase() {
+    const result = await dialog.showOpenDialog(null, {
+        title: 'Selecionar Banco de Dados Antigo',
+        filters: [
+            { name: 'Banco de Dados', extensions: ['db', 'sqlite', 'sqlite3'] },
+            { name: 'Todos os Arquivos', extensions: ['*'] }
+        ],
+        properties: ['openFile']
+    });
+    
+    if (result.canceled || result.filePaths.length === 0) {
+        return false;
+    }
+    
+    const oldDbPath = result.filePaths[0];
+    
+    try {
+        // Cria backup do banco atual se existir
+        if (fs.existsSync(DB_PATH)) {
+            await createBackup();
+        }
+        
+        // Copia o banco antigo
+        fs.copyFileSync(oldDbPath, DB_PATH);
+        
+        await dialog.showMessageBox(null, {
+            type: 'info',
+            title: 'Importação Concluída',
+            message: 'Dados importados com sucesso!',
+            detail: 'Seus dados antigos foram restaurados.',
+            buttons: ['OK']
+        });
+        
+        return true;
+    } catch (error) {
+        console.error('Erro ao importar banco antigo:', error);
+        await dialog.showErrorBox('Erro na Importação', 'Não foi possível importar o banco de dados selecionado.');
+        return false;
+    }
+}
+
 function initializeDatabase() {
     try {
         db = new Database(DB_PATH);
@@ -134,6 +253,49 @@ const boletosHandlers = {
     }
 };
 
+/* =================(HANDLERS IPC - BACKUP/RESTORE)================= */
+const backupHandlers = {
+    'create-backup': async () => {
+        const backupPath = await createBackup();
+        return { success: !!backupPath, path: backupPath };
+    },
+    
+    'import-database': async () => {
+        const imported = await importOldDatabase();
+        if (imported) {
+            // Reinicializa o banco após importação
+            db?.close();
+            if (!initializeDatabase()) {
+                return { success: false, error: 'Falha ao reinicializar banco após importação' };
+            }
+        }
+        return { success: imported };
+    },
+    
+    'export-database': async () => {
+        const result = await dialog.showSaveDialog(null, {
+            title: 'Exportar Banco de Dados',
+            defaultPath: `gestor-gastos-${new Date().toISOString().slice(0, 10)}.db`,
+            filters: [
+                { name: 'Banco de Dados', extensions: ['db'] },
+                { name: 'Todos os Arquivos', extensions: ['*'] }
+            ]
+        });
+        
+        if (result.canceled) {
+            return { success: false, cancelled: true };
+        }
+        
+        try {
+            fs.copyFileSync(DB_PATH, result.filePath);
+            return { success: true, path: result.filePath };
+        } catch (error) {
+            console.error('Erro ao exportar banco:', error);
+            return { success: false, error: error.message };
+        }
+    }
+};
+
 /* =================(REGISTRO DE HANDLERS IPC)================= */
 function registerIpcHandlers() {
     // Registra todos os handlers de gastos
@@ -145,13 +307,49 @@ function registerIpcHandlers() {
     Object.entries(boletosHandlers).forEach(([channel, handler]) => {
         ipcMain.handle(channel, handler);
     });
+    
+    // Registra handlers de backup/restore
+    Object.entries(backupHandlers).forEach(([channel, handler]) => {
+        ipcMain.handle(channel, handler);
+    });
 }
 
 /* =================(INICIALIZAÇÃO DO APP)================= */
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     // Define App User Model ID no Windows para fixar ícone na barra de tarefas
     if (process.platform === 'win32') {
         app.setAppUserModelId('com.edson.gestorgastos');
+    }
+
+    // Verifica banco existente e pergunta ao usuário o que fazer
+    const dbAction = await checkExistingDatabase();
+    
+    switch (dbAction) {
+        case 'cancel':
+            app.quit();
+            return;
+            
+        case 'backup_and_new':
+            await createBackup();
+            // Remove o banco atual para criar um novo
+            if (fs.existsSync(DB_PATH)) {
+                fs.unlinkSync(DB_PATH);
+            }
+            break;
+            
+        case 'import_old':
+            const imported = await importOldDatabase();
+            if (!imported) {
+                app.quit();
+                return;
+            }
+            break;
+            
+        case 'use_existing':
+        case 'create_new':
+        default:
+            // Continua normalmente
+            break;
     }
 
     if (!initializeDatabase()) {

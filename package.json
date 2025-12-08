@@ -13,13 +13,14 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1"
+    "better-sqlite3": "^12.4.1",
+    "chart.js": "^4.5.1"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.7.2",
+    "electron": "^31.0.0",
     "electron-builder": "^24.9.1",
-    "png-to-ico": "^2.1.8",
-    "electron": "^31.0.0"
+    "png-to-ico": "^2.1.8"
   },
   "build": {
     "appId": "com.edson.gestorgastos",
@@ -40,5 +41,4 @@
       "shortcutName": "Gestor de Gastos"
     }
   }
-  
 }

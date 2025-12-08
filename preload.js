@@ -18,5 +18,13 @@ contextBridge.exposeInMainWorld('api', {
     add: (boleto) => ipcRenderer.invoke('add-boleto', boleto),
     update: (boleto) => ipcRenderer.invoke('update-boleto', boleto),
     delete: (id) => ipcRenderer.invoke('delete-boleto', id)
+  },
+  
+  /* =================(BACKUP/RESTORE OPERATIONS)================= */
+  // Operações de backup e restauração
+  backup: {
+    create: () => ipcRenderer.invoke('create-backup'),
+    import: () => ipcRenderer.invoke('import-database'),
+    export: () => ipcRenderer.invoke('export-database')
   }
 });
