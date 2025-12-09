@@ -9,7 +9,9 @@
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "icons": "node scripts/generate-icons.js",
     "pack": "npm run icons && electron-builder --dir",
-    "dist": "npm run icons && electron-builder --win --x64",
+    "dist": "npm run icons && set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64",
+    "dist-installer": "npm run icons && set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64",
+    "package-exe": "npm run icons && electron-packager . \"Gestor de Gastos\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"node_modules/(electron-builder|@electron)\" --icon=build/icon.ico",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -20,6 +22,7 @@
     "@electron/rebuild": "^3.7.2",
     "electron": "^31.0.0",
     "electron-builder": "^24.9.1",
+    "electron-packager": "^17.1.2",
     "png-to-ico": "^2.1.8"
   },
   "build": {
