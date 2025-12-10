@@ -28,6 +28,137 @@ body {
   padding: 20px;
 }
 
+/* ================= ESTILOS GLOBAIS PARA SELECT ================= */
+select {
+  padding: 8px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 20px;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+select:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.15);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+select:disabled {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ================= ESTILOS PARA AS OPÇÕES DO DROPDOWN ================= */
+select option {
+  padding: 10px 12px;
+  background: white;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  transition: var(--transition);
+}
+
+select option:hover {
+  background: linear-gradient(135deg, #f0f8ff 0%, #e8f5e8 100%);
+  color: var(--primary-color);
+}
+
+select option:checked,
+select option:focus {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+  color: white;
+  font-weight: 600;
+}
+
+select option:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Estilo específico para melhorar a aparência no Windows */
+select {
+  /* Remove a aparência padrão do sistema */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  /* Adiciona gradiente sutil de fundo */
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  
+  /* Melhora a sombra quando aberto */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+select:focus {
+  /* Sombra mais pronunciada quando focado */
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  /* Gradiente mais vibrante quando focado */
+  background: linear-gradient(180deg, #ffffff 0%, #f0f8f0 100%);
+}
+
+/* ================= ANIMAÇÕES E EFEITOS ESPECIAIS ================= */
+@keyframes selectFocus {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+select:focus {
+  animation: selectFocus 0.3s ease-in-out;
+}
+
+/* Efeito de brilho sutil */
+select::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+select:hover::before {
+  opacity: 1;
+}
+
+/* Melhorias para diferentes estados */
+select:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilo especial para opções selecionadas */
+select option:checked {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 /* ================= LAYOUT PRINCIPAL ================= */
 .screen {
   width: 580px;
@@ -96,38 +227,7 @@ body {
 
 .nav-btn:hover { background: #c7f9cc; }
 
-.btn-today {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
-  cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
-  backdrop-filter: blur(6px);
-}
 
-.btn-today:hover {
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
-  transform: translateY(-1px);
-}
-
-.btn-today:active {
-  transform: translateY(0px) scale(0.98);
-}
-
-.btn-today svg {
-  width: 14px;
-  height: 14px;
-  pointer-events: none;
-}
 
 /* ================= CALENDÁRIO ================= */
 .calendar-header {
@@ -153,11 +253,11 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
-  padding: 0 16px 8px;
+  padding: 8px 16px 12px;
   background: #e0e0e0;
   border-radius: 8px 8px 0 0;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   color: #555;
   text-align: center;
 }
@@ -257,6 +357,9 @@ body {
 #add-boleto-form input,
 #add-boleto-form select {
   width: 100%;
+}
+
+#add-boleto-form input {
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
@@ -264,8 +367,7 @@ body {
   background: #fafafa;
 }
 
-#add-boleto-form input:focus,
-#add-boleto-form select:focus {
+#add-boleto-form input:focus {
   outline: 2px solid var(--primary-hover);
   border-color: var(--primary-hover);
 }
@@ -351,10 +453,10 @@ body {
   text-align: center;
   color: var(--text-light);
   font-size: 0.9rem;
-  margin-bottom: 20px;
-  padding: 8px;
-  background: #f8f9fa;
-  border-radius: 6px;
+  margin-bottom: 8px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .boletos-table {
@@ -426,13 +528,7 @@ body {
   margin-top: 12px;
 }
 
-.report-controls select {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.9rem;
-}
+
 
 .report-content {
   padding: 20px;
@@ -578,13 +674,7 @@ body {
   margin-top: 12px;
 }
 
-.report-controls select {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  background: white;
-  font-size: 0.9rem;
-}
+
 
 .report-content {
   padding: 20px;
@@ -712,138 +802,6 @@ body {
 .boleto-form-table td:last-child { width: 60%; }
 .save-btn-cell { text-align: center !important; padding-top: 12px !important; }
 
-/* ================= BOTÃO RELATÓRIO ANUAL ================= */
-.annual-report-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #3498db;
-  border: none;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: var(--transition);
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.annual-report-btn:hover {
-  background: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-}
-
-.annual-report-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* ================= MODAL RELATÓRIO ANUAL ================= */
-.annual-modal-content {
-  width: 450px;
-  max-width: 90vw;
-  padding: 32px;
-}
-
-.annual-modal-content h2 {
-  text-align: center;
-  color: var(--text-dark);
-  margin-bottom: 24px;
-  font-size: 1.5rem;
-  font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 16px;
-}
-
-.annual-stats {
-  margin-bottom: 20px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.stat-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--text-light);
-  font-weight: 500;
-}
-
-.stat-value {
-  font-weight: 600;
-  color: var(--text-dark);
-  font-size: 0.95rem;
-}
-
-.stat-item.highlight .stat-value {
-  color: var(--primary-color);
-  font-weight: 700;
-}
-
-.stat-value:hover {
-  transition: var(--transition);
-}
-
-.stat-value[style*="underline"]:hover {
-  color: #2980b9;
-  transform: scale(1.05);
-}
-
-.stat-item:nth-child(2) .stat-value {
-  color: #e67e22;
-  font-weight: 600;
-}
-
-.annual-chart-placeholder {
-  margin-top: 24px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  text-align: center;
-  color: var(--text-light);
-  font-size: 0.9rem;
-  border: 1px dashed #ddd;
-}
-
-.year-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.year-selector label {
-  font-weight: 500;
-  color: var(--text-dark);
-}
-
-.year-selector select {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: white;
-}
-
 /* ================= BOTÕES FLUTUANTES ================= */
 .floating-buttons {
   position: fixed;
@@ -869,6 +827,8 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+
 
 .settings-btn {
   background: #666;

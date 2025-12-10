@@ -33,7 +33,6 @@ const elements = {
   modalBoletoMeses: byId('modal-boleto-meses'),
   modalBoletoMesesPreview: byId('modal-boleto-meses-preview'),
   cancelEditBtn: byId('cancel-edit-btn'),
-  btnToday: byId('btn-today'),
 
   // Elementos do relatório
   navCalendar: byId('nav-calendar'),
@@ -48,14 +47,7 @@ const elements = {
   categoryChart: byId('category-chart'),
   chartLegend: byId('chart-legend'),
 
-  // Elementos do relatório anual
-  annualReportBtn: byId('annual-report-btn'),
-  annualReportModal: byId('annual-report-modal'),
-  closeAnnualModalBtn: byId('close-annual-modal'),
-  highestMonth: byId('highest-month'),
-  highestMonthValue: byId('highest-month-value'),
-  yearTotal: byId('year-total'),
-  annualYear: byId('annual-year'),
+
 
   // Elementos de configurações
   settingsBtn: byId('settings-btn'),
@@ -630,214 +622,6 @@ const navigationManager = {
   }
 };
 
-/* =================(GERENCIAMENTO DE RELATÓRIO ANUAL)================= */
-const annualReportManager = {
-  currentHighestMonth: 0,
-  currentHighestYear: new Date().getFullYear(),
-  hasValidData: false,
-
-  openModal: () => {
-    elements.annualReportModal.style.display = 'block';
-    annualReportManager.updateAnnualReport();
-  },
-
-  closeModal: () => {
-    elements.annualReportModal.style.display = 'none';
-  },
-
-  navigateToMonth: () => {
-    if (!annualReportManager.hasValidData) {
-      console.log('Não há dados válidos para navegar');
-      return;
-    }
-
-    annualReportManager.closeModal();
-
-    state.currentMonth = annualReportManager.currentHighestMonth;
-    state.currentYear = annualReportManager.currentHighestYear;
-
-    console.log(`Navegando para: ${config.monthNames[state.currentMonth]} ${state.currentYear}`);
-
-    navigationManager.switchToCalendar();
-
-    calendarManager.updateCalendarDisplay();
-    calendarManager.loadCalendarData();
-  },
-
-  initializeAnnualReport: () => {
-    annualReportManager.populateYearSelector();
-  },
-
-  populateYearSelector: () => {
-    const currentYear = new Date().getFullYear();
-    elements.annualYear.innerHTML = '';
-
-    for (let year = 2020; year <= currentYear + 1; year++) {
-      const option = document.createElement('option');
-      option.value = year;
-      option.textContent = year;
-      if (year === currentYear) option.selected = true;
-      elements.annualYear.appendChild(option);
-    }
-  },
-
-  updateAnnualReport: async () => {
-    console.log('=== INICIANDO RELATÓRIO ANUAL ===');
-    const selectedYear = parseInt(elements.annualYear.value);
-    console.log('DEBUG: Ano selecionado:', selectedYear);
-    console.log('DEBUG: Data atual:', new Date().toISOString());
-
-    const parseFlexibleDate = (dataStr) => {
-      const s = String(dataStr ?? '');
-      if (s.includes('-')) return new Date(s);
-      if (s.includes('/')) {
-        const parts = s.split('/');
-        if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
-      }
-      return new Date(s);
-    };
-
-    try {
-      const boletos = await window.api.boletos.get();
-      console.log(`DEBUG: Encontrados ${boletos.length} boletos na base de dados`);
-
-      let gastos = [];
-      try {
-        if (window.api.gastos && window.api.gastos.get) {
-          gastos = await window.api.gastos.get();
-          console.log(`DEBUG: Encontrados ${gastos.length} gastos na base de dados`);
-        } else {
-          console.log('DEBUG: API de gastos não disponível - usando apenas boletos');
-        }
-      } catch (gastoError) {
-        console.log('DEBUG: Erro ao buscar gastos:', gastoError);
-      }
-
-      const yearBoletos = [];
-      boletos.forEach((boleto) => {
-        console.log('Processando boleto:', boleto);
-        try {
-          const boletoDate = parseFlexibleDate(boleto.data);
-          const boletoYear = boletoDate.getFullYear();
-
-          console.log(`Boleto: ${boleto.nome}, Data: ${boleto.data}, Ano: ${boletoYear}, Valor: ${boleto.valor}`);
-
-          if (!isNaN(boletoYear) && boletoYear === selectedYear) yearBoletos.push(boleto);
-        } catch (error) {
-          console.error('Erro ao processar boleto:', boleto, error);
-        }
-      });
-
-      const yearGastos = [];
-      if (gastos && gastos.length > 0) {
-        gastos.forEach((gasto) => {
-          try {
-            const gastoDate = parseFlexibleDate(gasto.data);
-            const gastoYear = gastoDate.getFullYear();
-            if (!isNaN(gastoYear) && gastoYear === selectedYear) yearGastos.push(gasto);
-          } catch (error) {
-            console.error('Erro ao processar gasto:', gasto, error);
-          }
-        });
-      }
-
-      console.log('Boletos filtrados do ano:', yearBoletos.length, yearBoletos);
-      console.log('Gastos filtrados do ano:', yearGastos.length, yearGastos);
-
-      const monthlyTotals = {};
-      const monthNames = config.monthNames;
-
-      for (let i = 0; i < 12; i++) monthlyTotals[i] = 0;
-
-      yearBoletos.forEach((boleto) => {
-        try {
-          const boletoDate = parseFlexibleDate(boleto.data);
-          const month = boletoDate.getMonth();
-          const valor = parseFloat(boleto.valor) || 0;
-
-          console.log(`Adicionando boleto ${boleto.nome}: R$ ${valor} ao mês ${month} (${monthNames[month]})`);
-
-          if (!isNaN(month) && month >= 0 && month <= 11 && valor > 0) monthlyTotals[month] += valor;
-        } catch (error) {
-          console.error('Erro ao processar boleto para somatória:', boleto, error);
-        }
-      });
-
-      yearGastos.forEach((gasto) => {
-        try {
-          const gastoDate = parseFlexibleDate(gasto.data);
-          const month = gastoDate.getMonth();
-          const valor = parseFloat(gasto.valor) || 0;
-
-          console.log(
-            `Adicionando gasto ${gasto.descricao || 'Sem descrição'}: R$ ${valor} ao mês ${month} (${monthNames[month]})`
-          );
-
-          if (!isNaN(month) && month >= 0 && month <= 11 && valor > 0) monthlyTotals[month] += valor;
-        } catch (error) {
-          console.error('Erro ao processar gasto para somatória:', gasto, error);
-        }
-      });
-
-      console.log('DEBUG: Totais por mês:', monthlyTotals);
-
-      const mesesComValor = Object.entries(monthlyTotals).filter(([, valor]) => valor > 0);
-      console.log(
-        `DEBUG: ${mesesComValor.length} meses com valores > 0:`,
-        mesesComValor.map(([mes, valor]) => `${monthNames[mes]}: R$ ${valor.toFixed(2)}`)
-      );
-
-      let highestMonth = 0;
-      let highestValue = 0;
-      let yearTotal = 0;
-
-      Object.entries(monthlyTotals).forEach(([month, value]) => {
-        yearTotal += value;
-        if (value > highestValue) {
-          highestValue = value;
-          highestMonth = parseInt(month);
-        }
-      });
-
-      console.log('Mês com maior gasto:', highestMonth, monthNames[highestMonth], 'Valor:', highestValue);
-      console.log('Total do ano:', yearTotal);
-
-      annualReportManager.currentHighestMonth = highestMonth;
-      annualReportManager.currentHighestYear = selectedYear;
-
-      console.log(`RESULTADO: ${yearBoletos.length + yearGastos.length} registros processados para ${selectedYear}`);
-      console.log(
-        `RESULTADO: Mês com mais gastos - ${monthNames[highestMonth]}: R$ ${highestValue.toFixed(2)}`
-      );
-      console.log(`RESULTADO: Total do ano ${selectedYear}: R$ ${yearTotal.toFixed(2)}`);
-
-      if (yearTotal > 0) {
-        annualReportManager.hasValidData = true;
-        elements.highestMonth.textContent = monthNames[highestMonth];
-        elements.highestMonth.style.cursor = 'pointer';
-        elements.highestMonth.style.textDecoration = 'underline';
-        elements.highestMonth.title = 'Clique para ir ao calendário deste mês';
-        elements.highestMonthValue.textContent = `R$ ${highestValue.toFixed(2).replace('.', ',')}`;
-        elements.yearTotal.textContent = `R$ ${yearTotal.toFixed(2).replace('.', ',')}`;
-      } else {
-        annualReportManager.hasValidData = false;
-        elements.highestMonth.textContent = 'Nenhum dado';
-        elements.highestMonth.style.cursor = 'default';
-        elements.highestMonth.style.textDecoration = 'none';
-        elements.highestMonth.title = 'Não há dados para exibir';
-        elements.highestMonthValue.textContent = 'R$ 0,00';
-        elements.yearTotal.textContent = 'R$ 0,00';
-      }
-    } catch (error) {
-      console.error('Erro ao carregar relatório anual:', error);
-      elements.highestMonth.textContent = 'Erro ao carregar';
-      elements.highestMonthValue.textContent = 'R$ 0,00';
-      elements.yearTotal.textContent = 'R$ 0,00';
-      elements.monthlyAverage.textContent = 'R$ 0,00';
-    }
-  }
-};
-
 /* =================(GERENCIAMENTO DE CONFIGURAÇÕES)================= */
 const settingsManager = {
   openModal: () => {
@@ -1013,24 +797,7 @@ const init = {
       });
     }
 
-    if (elements.btnToday) {
-      elements.btnToday.addEventListener('click', () => {
-        const today = new Date();
-        state.currentMonth = today.getMonth();
-        state.currentYear = today.getFullYear();
 
-        calendar.updateCalendarDisplay();
-        calendar.loadCalendarData();
-
-        setTimeout(() => {
-          const todayElement = document.querySelector(`[data-day="${today.getDate()}"]`);
-          if (todayElement) {
-            todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            todayElement.style.animation = 'highlight 1s ease-in-out';
-          }
-        }, 100);
-      });
-    }
 
     elements.navCalendar.addEventListener('click', navigationManager.switchToCalendar);
     elements.navReport.addEventListener('click', navigationManager.switchToReport);
@@ -1038,21 +805,8 @@ const init = {
     elements.reportMonth.addEventListener('change', reportManager.updateReport);
     elements.reportYear.addEventListener('change', reportManager.updateReport);
 
-    elements.annualReportBtn.addEventListener('click', annualReportManager.openModal);
-    elements.closeAnnualModalBtn.addEventListener('click', annualReportManager.closeModal);
-    elements.annualYear.addEventListener('change', annualReportManager.updateAnnualReport);
 
-    elements.highestMonth.addEventListener('click', (e) => {
-      if (annualReportManager.hasValidData) annualReportManager.navigateToMonth();
-      else {
-        console.log('Clique ignorado - não há dados válidos');
-        e.preventDefault();
-      }
-    });
 
-    elements.annualReportModal.addEventListener('click', (e) => {
-      if (e.target === elements.annualReportModal) annualReportManager.closeModal();
-    });
 
     elements.settingsBtn.addEventListener('click', settingsManager.openModal);
     elements.restartBtn.addEventListener('click', settingsManager.restartPage);
@@ -1070,7 +824,7 @@ const init = {
     calendarManager.createCalendar();
     tableManager.updateBoletosTable();
     reportManager.initializeReport();
-    annualReportManager.initializeAnnualReport();
+
     init.setupEventListeners();
   }
 };
