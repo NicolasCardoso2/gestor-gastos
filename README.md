@@ -15,7 +15,7 @@
 ### **Calendário Interativo**
 - Visualização mensal de gastos
 - Indicação visual de dias com boletos cadastrados
-- Navegação entre meses
+- Navegação entre meses com setas
 - Hover otimizado sem flicker
 
 ### **Relatório Mensal**
@@ -24,26 +24,23 @@
 - Gráfico de pizza mostrando distribuição por categoria
 - Seleção de mês/ano para análise histórica
 
-### **Relatório Anual**
-- Visualização do mês com maiores gastos
-- Total anual de gastos
-- Navegação rápida para mês específico
-
 ### **Gestão de Boletos**
 - Categorias: Água, Luz, Internet, Telefone, Aluguel, Cartão, **Imposto**, **Contadora**, Outros
 - Repetição mensal automática
 - Observações e alertas personalizados
+- Interface modal intuitiva para cadastro
 
 ### **Sistema de Backup**
 - Backup automático do banco de dados
 - Importação de versões anteriores
 - Proteção contra perda de dados
 
-### **Melhorias Técnicas**
-- Interface responsiva sem layout shift
-- Hover suave sem problemas de flicker
-- Agregação inteligente de dados mensais
-- Visualizações interativas com Chart.js
+### **Interface Moderna**
+- Dropdowns/selects com design arredondado e animações
+- Cores consistentes e transições suaves
+- Layout limpo e profissional
+- Botão de reinicialização rápida
+- Tipografia melhorada nos dias da semana
 
 ---
 
@@ -83,23 +80,30 @@ O instalador (.exe) será gerado na pasta `dist/`.
 
 ## Como Usar
 
-### Acessar o Relatório Mensal
+### Navegação no Calendário
 1. Inicie o aplicativo (`npm start`)
-2. Na tela principal, clique na aba **"Relatório Mensal"**
-3. Use os seletores de mês e ano para escolher o período
-4. Visualize:
+2. Use as **setas ◀ ▶** para navegar entre os meses
+3. Clique em qualquer dia para adicionar ou visualizar boletos
+4. Dias com boletos aparecem destacados visualmente
+
+### Acessar o Relatório Mensal
+1. Na tela principal, clique na aba **"Relatório Mensal"**
+2. Use os **dropdowns arredondados** de mês e ano para escolher o período
+3. Visualize:
    - **Tabela diária**: gastos de cada dia do mês
    - **Resumo**: totais e médias
    - **Gráfico de pizza**: distribuição por categoria
 
-### Acessar o Relatório Anual
-1. Clique no botão **"Relatório Anual"** (canto superior direito)
-2. Selecione o ano desejado
-3. Visualize o mês com maiores gastos e total anual
-4. Clique no nome do mês para navegar diretamente
+### Gerenciar Boletos
+1. Clique em um dia do calendário
+2. Use o botão **"Adicionar"** para cadastrar novos boletos
+3. Escolha entre as categorias disponíveis: **Imposto**, **Contadora**, etc.
+4. Configure repetição mensal se necessário
 
-### Adicionar Novas Categorias
-As novas categorias **"Imposto"** e **"Contadora"** estão disponíveis em todos os formulários de cadastro de boletos e são incluídas automaticamente nos relatórios e gráficos.
+### Sistema de Backup
+1. Clique no botão de **configurações** (ícone de engrenagem)
+2. Use as opções de backup, importação e exportação
+3. Mantenha seus dados sempre seguros
 
 ---
 
@@ -129,7 +133,10 @@ Artefatos de build (dist/, build/), node_modules/ e database.db estão listados 
 
 ## Observações
 
+- **Aplicativo desktop** exclusivo (não é versão web)
 - Projeto simples e leve para controle pessoal de gastos
+- Interface moderna com dropdowns arredondados e animações suaves
 - Ideal para estudo de integração entre Electron + SQLite
 - Código modular e fácil de adaptar para outras aplicações desktop
 - Sistema completo de backup e recuperação de dados
+- Layout otimizado sem botões desnecessários
