@@ -1,12 +1,19 @@
-# Gestor de Gastos
+# Gestor de Gastos Desktop
 
-**Aplicativo desktop para gestão de gastos e boletos**, desenvolvido com `Electron` + `SQLite`.
+> **Aplicativo desktop moderno para gestão de gastos e boletos**, desenvolvido com `Electron` + `SQLite`.
 
-![Electron Badge](https://img.shields.io/badge/Electron-^31.0-blue?logo=electron)
-![SQLite Badge](https://img.shields.io/badge/SQLite-DB-lightblue?logo=sqlite)
-![Chart.js Badge](https://img.shields.io/badge/Chart.js-Gráficos-orange?logo=chart.js)
-![Node.js Badge](https://img.shields.io/badge/Node.js-18%2B-brightgreen?logo=node.js)
-![Windows Badge](https://img.shields.io/badge/Platform-Windows%2010/11-blue?logo=windows)
+<div align="center">
+
+![Electron Badge](https://img.shields.io/badge/Electron-^31.0-2B2E3A?style=for-the-badge&logo=electron&logoColor=9FEAF9)
+![SQLite Badge](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Chart.js Badge](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chart.js&logoColor=white)
+![Node.js Badge](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Windows Badge](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/release/NicolasCardoso2/gestor-gastos-desktop?style=for-the-badge)](https://github.com/NicolasCardoso2/gestor-gastos-desktop/releases)
+
+</div>
 
 ---
 
@@ -25,7 +32,7 @@
 - Seleção de mês/ano para análise histórica
 
 ### **Gestão de Boletos**
-- Categorias: Água, Luz, Internet, Telefone, Aluguel, Cartão, **Imposto**, **Contadora**, Outros
+- **Categorias**: Água, Luz, Internet, Telefone, Aluguel, Cartão, **Imposto**, **Contadora**, Outros
 - Repetição mensal automática
 - Observações e alertas personalizados
 - Interface modal intuitiva para cadastro
@@ -46,97 +53,148 @@
 
 ## Requisitos
 
-- **Node.js** `v18+`
-- **Windows 10 ou 11**
+- **Node.js** `v18+` ou superior
+- **Windows 10 ou 11** (64-bit)
+- **4GB RAM** mínimo (recomendado: 8GB)
+- **200MB** de espaço em disco
 
 ---
 
-## Desenvolvimento
+## Instalação e Desenvolvimento
+
+### Instalação Rápida
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/NicolasCardoso2/gestor-gastos-desktop.git
+   cd gestor-gastos-desktop
+   ```
+
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   ```
+
+3. **Execute o aplicativo:**
 
 ```bash
-npm install
-npm run start
+npm start
 ```
 
----
+### Scripts Disponíveis
 
-**Gerar ícones (modo dev)**
+| Script | Comando | Descrição |
+|--------|---------|-----------|
+| **Desenvolvimento** | `npm start` | Inicia o app em modo desenvolvimento |
+| **Gerar Ícones** | `npm run icons` | Gera ícones para diferentes plataformas |
+| **Build Produção** | `npm run dist` | Cria o instalador (.exe) na pasta `dist/` |
+| **Limpeza** | `npm run clean` | Remove arquivos temporários |
 
-```bash
-npm run icons
+### Estrutura do Projeto
+
 ```
-
----
-
-**Build do instalador (Windows)**
-
-```bash
-npm run dist
+gestor-gastos/
+├──  assets/          # Recursos e ícones
+├──  build/           # Arquivos de build
+├──  renderer/        # Interface gráfica (HTML/CSS/JS)
+│   ├── index.html      # Página principal
+│   ├── renderer.js     # Lógica do renderer
+│   └── styles.css      # Estilos da aplicação
+├──  scripts/         # Scripts de build e utilitários
+├──  main.js          # Processo principal do Electron
+├──  preload.js       # Script de pré-carregamento
+└──  package.json     # Configurações e dependências
 ```
-
-O instalador (.exe) será gerado na pasta `dist/`.
 
 ---
 
 ## Como Usar
 
 ### Navegação no Calendário
-1. Inicie o aplicativo (`npm start`)
-2. Use as **setas ◀ ▶** para navegar entre os meses
-3. Clique em qualquer dia para adicionar ou visualizar boletos
-4. Dias com boletos aparecem destacados visualmente
+1. **Inicie** o aplicativo (`npm start`)
+2. **Navegue** entre meses usando as setas **◀ ▶**
+3. **Clique** em qualquer dia para adicionar ou visualizar boletos
+4. **Identifique** dias com boletos pelos destacos visuais
 
-### Acessar o Relatório Mensal
-1. Na tela principal, clique na aba **"Relatório Mensal"**
-2. Use os **dropdowns arredondados** de mês e ano para escolher o período
-3. Visualize:
+### Acessar o Relatório Mensal  
+1. **Clique** na aba **"Relatório Mensal"**
+2. **Selecione** o período com os dropdowns de mês e ano
+3. **Analise** os dados:
    - **Tabela diária**: gastos de cada dia do mês
-   - **Resumo**: totais e médias
+   - **Resumo**: totais e médias calculadas
    - **Gráfico de pizza**: distribuição por categoria
 
 ### Gerenciar Boletos
-1. Clique em um dia do calendário
-2. Use o botão **"Adicionar"** para cadastrar novos boletos
-3. Escolha entre as categorias disponíveis: **Imposto**, **Contadora**, etc.
-4. Configure repetição mensal se necessário
+1. **Selecione** um dia no calendário
+2. **Adicione** novos boletos com o botão "Adicionar"
+3. **Categorize** entre: Imposto, Contadora, Água, Luz, etc.
+4. **Configure** repetição mensal automática
 
 ### Sistema de Backup
-1. Clique no botão de **configurações** (ícone de engrenagem)
-2. Use as opções de backup, importação e exportação
-3. Mantenha seus dados sempre seguros
+1. **Acesse** as configurações ( ícone de engrenagem)
+2. **Utilize** as opções de backup e importação
+3. **Mantenha** seus dados sempre protegidos
 
 ---
 
 ## Banco de Dados
 
-O banco `database.db` é criado automaticamente em:
+O banco de dados `database.db` é criado **automaticamente** em:
 
-```
-%APPDATA%/Gestor de Gastos
+```bash
+%APPDATA%/Gestor de Gastos/database.db
 ```
 
-Artefatos de build (dist/, build/), node_modules/ e database.db estão listados no .gitignore.
+> **Nota:** Arquivos como `dist/`, `build/`, `node_modules/` e `database.db` estão no `.gitignore` para manter o repositório limpo.
 
 ---
 
 ## Tecnologias Utilizadas
 
-| Tecnologia  | Função                        |
-| ----------- | ----------------------------- |
-| Electron    | Criação do app desktop        |
-| SQLite      | Armazenamento local dos dados |
-| Chart.js    | Gráficos de pizza interativos |
-| Node.js     | Execução e scripts de build   |
-| HTML/CSS/JS | Interface gráfica (renderer)  |
+| Tecnologia |  Função | Versão |
+|---------------|-----------|-----------|
+| **Electron** | Framework para apps desktop | `^31.0` |
+| **SQLite** | Banco de dados local | `Latest` |
+| **Chart.js** | Gráficos interativos | `Latest` |
+| **Node.js** | Runtime JavaScript | `18+` |
+| **HTML/CSS/JS** | Interface do usuário | `ES6+` |
+
+---
+
+## Contribuindo
+
+Contribuições são bem-vindas! Por favor:
+
+1. **Fork** o projeto
+2. **Crie** uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit** suas mudanças (`git commit -m 'Add: Amazing Feature'`)
+4. **Push** para a branch (`git push origin feature/AmazingFeature`)
+5. **Abra** um Pull Request
+
+---
+
+## Licença
+
+Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
 ## Observações
 
 - **Aplicativo desktop** exclusivo (não é versão web)
-- Projeto simples e leve para controle pessoal de gastos
-- Interface moderna com dropdowns arredondados e animações suaves
-- Ideal para estudo de integração entre Electron + SQLite
-- Código modular e fácil de adaptar para outras aplicações desktop
-- Sistema completo de backup e recuperação de dados
-- Layout otimizado sem botões desnecessários
+- Projeto **simples e leve** para controle pessoal de gastos
+- Interface **moderna** com animações suaves
+- Ideal para **estudo** de integração Electron + SQLite
+- Código **modular** e fácil de adaptar
+- Sistema **completo** de backup e recuperação
+- Layout **otimizado** e intuitivo
+
+---
+
+<div align="center">
+
+**Se este projeto te ajudou, deixe uma estrela!**
+
+[![GitHub stars](https://img.shields.io/github/stars/NicolasCardoso2/gestor-gastos-desktop?style=social)](https://github.com/NicolasCardoso2/gestor-gastos-desktop/stargazers)
+
+</div>
