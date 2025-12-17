@@ -86,7 +86,7 @@ const utils = {
 
   parseDate: (dateStr) => {
     const [month, day, year] = dateStr.split('/').map(Number);
-    return { month: month - 1, day, year };
+    return new Date(year, month - 1, day);
   },
 
   normalizeString: (str) => (str ?? '').toString().trim().toLowerCase(),
@@ -206,20 +206,71 @@ const tableManager = {
     tableManager.updateDateIndicator(targetDate);
 
     if (!expenses.length) {
-      elements.boletosTableBody.innerHTML = '<tr><td colspan="2">Nenhum boleto</td></tr>';
+      elements.boletosTableBody.innerHTML = '<tr><td colspan="3">Nenhum boleto</td></tr>';
       elements.boletosTotal.textContent = utils.formatCurrency(0);
       return;
     }
 
+    const currentDate = new Date();
+    const targetDateObj = utils.parseDate(targetDate);
+
     const frag = document.createDocumentFragment();
-    for (const item of expenses) {
+    for (let i = 0; i < expenses.length; i++) {
+      const item = expenses[i];
       total += parseFloat(item.valor || 0);
+      
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${item.nome || ''}</td><td>${utils.formatCurrency(item.valor)}</td>`;
+      
+      // Determinar status visual
+      let statusClass = '';
+      let isOverdue = false;
+      
+      if (item.pago) {
+        statusClass = 'boleto-pago';
+      } else if (targetDateObj < currentDate) {
+        statusClass = 'boleto-vencido';
+        isOverdue = true;
+      }
+      
+      if (statusClass) {
+        tr.classList.add(statusClass);
+      }
+      
+      // Criar checkbox
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!item.pago;
+      checkbox.className = 'boleto-checkbox';
+      checkbox.addEventListener('change', () => {
+        tableManager.toggleBoletoStatus(targetDate, i, checkbox.checked);
+      });
+      
+      const checkboxCell = document.createElement('td');
+      checkboxCell.appendChild(checkbox);
+      
+      const nomeCell = document.createElement('td');
+      nomeCell.textContent = item.nome || '';
+      
+      const valorCell = document.createElement('td');
+      valorCell.textContent = utils.formatCurrency(item.valor);
+      
+      tr.appendChild(checkboxCell);
+      tr.appendChild(nomeCell);
+      tr.appendChild(valorCell);
+      
       frag.appendChild(tr);
     }
     elements.boletosTableBody.appendChild(frag);
     elements.boletosTotal.textContent = utils.formatCurrency(total);
+  },
+
+  toggleBoletoStatus: (dateStr, index, isPago) => {
+    const expenses = state.expenses[dateStr];
+    if (!expenses || !expenses[index]) return;
+    
+    expenses[index].pago = isPago;
+    stateManager.saveExpenses();
+    tableManager.updateBoletosTable(dateStr);
   },
 
   updateDateIndicator: (dateStr) => {
@@ -272,20 +323,71 @@ const modalManager = {
     const li = document.createElement('li');
     li.dataset.index = index;
 
+    // Determinar status visual
+    const currentDate = new Date();
+    const boletoDate = utils.parseDate(state.selectedDate);
+    let statusClass = '';
+    
+    if (item.pago) {
+      statusClass = 'boleto-pago';
+    } else if (boletoDate < currentDate) {
+      statusClass = 'boleto-vencido';
+    }
+    
+    if (statusClass) {
+      li.classList.add(statusClass);
+    }
+
     const extraInfo = [];
     if (item.obs) extraInfo.push(item.obs);
     if (item.repeticao && item.repeticao !== 'unica') {
       extraInfo.push(item.repeticao === 'mensal' && item.meses ? `(${item.meses} meses)` : `(${item.repeticao})`);
     }
 
-    li.innerHTML = `
+    // Criar checkbox
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = !!item.pago;
+    checkbox.className = 'boleto-checkbox modal-checkbox';
+    checkbox.addEventListener('change', (e) => {
+      e.stopPropagation();
+      modalManager.toggleBoletoStatus(index, checkbox.checked);
+    });
+    
+    const checkboxContainer = document.createElement('div');
+    checkboxContainer.className = 'checkbox-container';
+    checkboxContainer.appendChild(checkbox);
+    
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'boleto-content';
+    contentContainer.innerHTML = `
             <strong>${item.tipo || ''}</strong>${item.nome || ''} 
             <span>${utils.formatCurrency(item.valor)}</span>
             ${extraInfo.length ? `<small>${extraInfo.join(' • ')}</small>` : ''}
         `;
 
-    li.addEventListener('click', () => modalManager.selectBoleto(li, index));
+    li.appendChild(checkboxContainer);
+    li.appendChild(contentContainer);
+    
+    contentContainer.addEventListener('click', () => modalManager.selectBoleto(li, index));
     return li;
+  },
+
+  toggleBoletoStatus: (index, isPago) => {
+    const expenses = state.expenses[state.selectedDate];
+    if (!expenses || !expenses[index]) return;
+    
+    expenses[index].pago = isPago;
+    stateManager.saveExpenses();
+    
+    // Atualizar a exibição do modal
+    modalManager.updateBoletosList(state.selectedDate);
+    // Atualizar a tabela principal se estiver na mesma data
+    const currentDisplayDate = elements.boletosTableBody.closest('.boletos-table-container')?.querySelector('.current-date-indicator')?.textContent;
+    const selectedDisplayDate = state.selectedDate.split('/').reverse().join('/');
+    if (currentDisplayDate && currentDisplayDate.includes(selectedDisplayDate.slice(0, 5))) {
+      tableManager.updateBoletosTable(state.selectedDate);
+    }
   },
 
   selectBoleto: (element, index) => {
@@ -360,12 +462,16 @@ const formManager = {
       valor: parseFloat(elements.modalBoletoValor.value),
       obs: elements.modalBoletoObs.value.trim(),
       repeticao,
-      meses: repeticao === 'mensal' ? parseInt(elements.modalBoletoMeses.value || '0', 10) : 0
+      meses: repeticao === 'mensal' ? parseInt(elements.modalBoletoMeses.value || '0', 10) : 0,
+      pago: false
     };
 
     if (!formManager.validateForm(formData)) return;
 
     if (state.isEditing && state.selectedBoletoIndex !== null) {
+      // Preservar o status de pagamento existente ao editar
+      const boletoExistente = state.expenses[state.selectedDate][state.selectedBoletoIndex];
+      formData.pago = boletoExistente.pago || false;
       state.expenses[state.selectedDate][state.selectedBoletoIndex] = formData;
     } else {
       stateManager.addExpense(state.selectedDate, formData);

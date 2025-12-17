@@ -10,7 +10,6 @@
 ![Node.js Badge](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![Windows Badge](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/NicolasCardoso2/gestor-gastos-desktop?style=for-the-badge)](https://github.com/NicolasCardoso2/gestor-gastos-desktop/releases)
 
 </div>
@@ -173,11 +172,6 @@ Contribuições são bem-vindas! Por favor:
 
 ---
 
-## Licença
-
-Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
 
 ## Observações
 
