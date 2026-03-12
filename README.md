@@ -23,7 +23,7 @@
 
 ### 📅 Calendário Interativo
 - Visualização mensal com destaque nos dias que têm boletos cadastrados
-- Navegação por mês com setas ◀ ▶
+- Navegação por mês com setas
 - Clique em qualquer dia para adicionar ou visualizar lançamentos
 
 ### 📊 Relatório Mensal
